@@ -33,6 +33,7 @@ export default function HistoryScreen({ navigation }: Props) {
   const [range, setRange] = useState<Range>("1M");
   const [monthOffset, setMonthOffset] = useState(0);
   const { width: screenWidth } = useWindowDimensions();
+  const s = Math.min(1.5, Math.max(0.7, screenWidth / 390));
 
   // Heatmap generator
   const getMonthData = (offset: number) => {
@@ -109,9 +110,9 @@ export default function HistoryScreen({ navigation }: Props) {
       .sort((a, b) => a.ts - b.ts);
   }, [filtered]);
 
-  const chartWidth = screenWidth - 48;
-  const chartHeight = CHART_HEIGHT;
-  const pad = { l: 34, r: 2, t: 8, b: 26 };
+  const chartWidth = screenWidth - 40;
+  const chartHeight = CHART_HEIGHT * s;
+  const pad = { l: 32, r: 0, t: 4, b: 22 };
 
   const scatterPoints = useMemo(() => {
     if (chartData.length < 2) return { points: [], trend: "", avgY: 0, maxY: 0, minY: 0, minX: 0, maxX: 0 };
@@ -198,19 +199,19 @@ export default function HistoryScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backLink}>← retour</Text>
+          <Text style={[styles.backLink, { fontSize: 13 * s, paddingHorizontal: 16 * s, paddingVertical: 10 * s, borderRadius: 20 * s }]}>← retour</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Calendar carousel — independent, always all data */}
         {allMonths.length > 0 && (
-          <View style={{ height: 260 }}>
+          <View style={{ height: 260 * s }}>
             <Carousel
-              style={{ width: screenWidth, height: 260 }}
+              style={{ width: screenWidth, height: 260 * s }}
               data={allMonths}
               defaultIndex={11}
-              itemSize={screenWidth - 60}
+              itemSize={Math.min(screenWidth - 60, 340)}
               onSnapToItem={(idx: number) => {
                 setMonthOffset(idx - 11);
                 setRange("1M");
@@ -254,7 +255,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 {(["1M", "6M", "1Y", "ALL"] as Range[]).map((r) => (
                   <TouchableOpacity
                     key={r}
-                    style={[styles.rangeBtn, range === r && styles.rangeBtnActive]}
+                    style={[styles.rangeBtn, { paddingHorizontal: 12 * s, paddingVertical: 5 * s, borderRadius: 6 * s }, range === r && styles.rangeBtnActive]}
                     onPress={() => setRange(r)}
                   >
                     <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>{r}</Text>
@@ -317,24 +318,24 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* Stats row */}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={styles.statVal}>{stats.count}</Text>
-            <Text style={styles.statLabel}>sessions</Text>
+            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{stats.count}</Text>
+            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>sessions</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statVal}>{formatTime(Math.round(stats.avg))}</Text>
-            <Text style={styles.statLabel}>moyenne</Text>
+            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{formatTime(Math.round(stats.avg))}</Text>
+            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>moyenne</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statVal}>{formatTime(stats.max)}</Text>
-            <Text style={styles.statLabel}>record</Text>
+            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{formatTime(stats.max)}</Text>
+            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>record</Text>
           </View>
         </View>
 
         <View style={styles.sessionsCard}>
         {filtered.map((item, i) => (
           <View key={i} style={[styles.row, i === filtered.length - 1 && styles.rowLast]}>
-            <Text style={styles.rowDate}>{item.date}</Text>
-            <Text style={styles.rowTime}>{formatTime(item.duration ?? 0)}</Text>
+            <Text style={[styles.rowDate, { fontSize: 12 * s }]}>{item.date}</Text>
+            <Text style={[styles.rowTime, { fontSize: 14 * s }]}>{formatTime(item.duration ?? 0)}</Text>
             <View style={styles.rowBar}>
               <View style={[styles.barFill, { width: `${Math.min(100, ((item.duration ?? 0) / (stats.max || 1)) * 100)}%`, backgroundColor: item.completed ? "#e2b714" : "#444" }]} />
             </View>
@@ -343,11 +344,17 @@ export default function HistoryScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.bottomRow}>
-          <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
-            <Text style={styles.clearBtnText}>effacer</Text>
+          <TouchableOpacity
+            style={[styles.clearBtn, { paddingHorizontal: 24 * s, paddingVertical: 12 * s, borderRadius: 24 * s }]}
+            onPress={handleClear}
+          >
+            <Text style={[styles.clearBtnText, { fontSize: 13 * s }]}>effacer</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.clearBtn} onPress={() => navigation.navigate("Import")}>
-            <Text style={styles.clearBtnText}>importer</Text>
+          <TouchableOpacity
+            style={[styles.clearBtn, { paddingHorizontal: 24 * s, paddingVertical: 12 * s, borderRadius: 24 * s }]}
+            onPress={() => navigation.navigate("Import")}
+          >
+            <Text style={[styles.clearBtnText, { fontSize: 13 * s }]}>importer</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -386,7 +393,7 @@ const styles = StyleSheet.create({
   // Heatmap
   heatPage: { alignItems: "center", paddingTop: 4 },
   monthLabel: { fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, fontWeight: "600", marginBottom: 6 },
-  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", width: 7 * 36 + 6 * 3, gap: 3 },
+  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", width: 7 * 36 + 6 * 3, gap: 3, alignSelf: "center" },
   dayLabelCell: { width: 36, height: 14, alignItems: "center", justifyContent: "center", marginBottom: 1 },
   dayLabel: { fontSize: 9, color: "#444" },
   heatCell: { width: 36, height: 36, borderRadius: 4, alignItems: "center", justifyContent: "center", overflow: "hidden" },
@@ -397,7 +404,7 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 9, color: "#555" },
   // Chart
   chartSection: {
-    marginTop: 8, backgroundColor: "#1c1c22", borderRadius: 16, padding: 8,
+    marginTop: 4, backgroundColor: "#1c1c22", borderRadius: 16, padding: 6,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 3,
   },
   // List rows
