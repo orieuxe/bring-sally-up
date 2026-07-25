@@ -211,7 +211,7 @@ export default function HistoryScreen({ navigation }: Props) {
               style={{ width: screenWidth, height: scale(260) }}
               data={allMonths}
               defaultIndex={11}
-              itemSize={Math.min(screenWidth - 60, 340)}
+              itemSize={Math.min(screenWidth - 60, scale(340))}
               onSnapToItem={(idx: number) => {
                 setMonthOffset(idx - 11);
                 setRange("1M");
@@ -219,7 +219,7 @@ export default function HistoryScreen({ navigation }: Props) {
               renderItem={({ item: hm }: { item: ReturnType<typeof getMonthData> }) => (
                 <View style={styles.heatPage}>
                   <Text style={styles.monthLabel}>{hm.monthLabel}</Text>
-                  <View style={[styles.heatmapGrid, { width: 7 * scale(36) + 6 * 3 }]}>
+                  <View style={[styles.heatmapGrid, { width: scale(270) }]}>
                     {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
                       <View key={i} style={[styles.dayLabelCell, { width: scale(36), height: scale(14) }]}>
                         <Text style={[styles.dayLabel, { fontSize: ms(9) }]}>{d}</Text>
