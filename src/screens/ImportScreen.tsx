@@ -120,12 +120,8 @@ export default function ImportScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   content: { padding: 20 },
-  header: { marginBottom: 16 },
-  backLink: {
-    fontSize: 13, color: "#aaa",
-    backgroundColor: "#1c1c22", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
-    overflow: "hidden",
-  },
+  header: { marginBottom: 12 },
+  backLink: { color: "#aaa" },
   title: { fontSize: 24, fontWeight: "800", color: "#fff", marginBottom: 12 },
   help: { fontSize: 13, color: "#888", lineHeight: 20, marginBottom: 16 },
   input: {
