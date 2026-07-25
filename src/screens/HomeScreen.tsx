@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
@@ -42,46 +43,54 @@ export default function HomeScreen({ navigation }: Props) {
     }, [])
   );
 
-  const fmt = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = (s % 60).toString().padStart(2, "0");
+  const { width: sw } = useWindowDimensions();
+  const s = Math.min(1.5, Math.max(0.7, sw / 390)); // scale factor
+  const fmt = (t: number) => {
+    const m = Math.floor(t / 60);
+    const sec = (t % 60).toString().padStart(2, "0");
     return `${m}:${sec}`;
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.center}>
-        <Text style={styles.logo}>BRING SALLY UP</Text>
+        <Text style={[styles.logo, { fontSize: 28 * s, marginBottom: 24 * s }]}>BRING SALLY UP</Text>
 
-        <View style={styles.scoresRow}>
-          <View style={styles.scoreBox}>
-            <Text style={styles.scoreLabel}>record</Text>
-            <Text style={styles.scoreValue}>
+        <View style={[styles.scoresRow, { gap: 32 * s }]}>
+          <View style={[styles.scoreBox, { paddingHorizontal: 24 * s, paddingVertical: 16 * s, borderRadius: 16 * s }]}>
+            <Text style={[styles.scoreLabel, { fontSize: 11 * s }]}>record</Text>
+            <Text style={[styles.scoreValue, { fontSize: 42 * s }]}>
               {bestScore?.duration != null ? fmt(bestScore.duration) : "--:--"}
             </Text>
-            <Text style={styles.scoreDate}>{bestScore?.date ?? ""}</Text>
+            <Text style={[styles.scoreDate, { fontSize: 12 * s }]}>{bestScore?.date ?? ""}</Text>
           </View>
-          <View style={styles.scoreBox}>
-            <Text style={styles.scoreLabel}>dernier</Text>
-            <Text style={styles.scoreValue}>
+          <View style={[styles.scoreBox, { paddingHorizontal: 24 * s, paddingVertical: 16 * s, borderRadius: 16 * s }]}>
+            <Text style={[styles.scoreLabel, { fontSize: 11 * s }]}>dernier</Text>
+            <Text style={[styles.scoreValue, { fontSize: 42 * s }]}>
               {lastScore?.duration != null ? fmt(lastScore.duration) : "--:--"}
             </Text>
-            <Text style={styles.scoreDate}>{lastScore?.date ?? ""}</Text>
+            <Text style={[styles.scoreDate, { fontSize: 12 * s }]}>{lastScore?.date ?? ""}</Text>
           </View>
         </View>
 
         {streak > 1 && (
-          <Text style={styles.streak}>🔥 {streak} jours de suite</Text>
+          <Text style={[styles.streak, { fontSize: 13 * s }]}>🔥 {streak} jours de suite</Text>
         )}
 
-        <TouchableOpacity style={styles.goBtn} onPress={() => navigation.navigate("Challenge")}>
-          <Text style={styles.goBtnIcon}>▶</Text>
+        <TouchableOpacity
+          style={[styles.goBtn, { width: 110 * s, height: 110 * s, borderRadius: 55 * s }]}
+          onPress={() => navigation.navigate("Challenge")}
+        >
+          <Text style={[styles.goBtnIcon, { fontSize: 36 * s }]}>▶</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.bottom}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => navigation.navigate("History")}>
-          <Text style={styles.navBtnText}>historique</Text>
+        <TouchableOpacity
+          style={[styles.navBtn, { paddingHorizontal: 28 * s, paddingVertical: 14 * s, borderRadius: 28 * s }]}
+          onPress={() => navigation.navigate("History")}
+        >
+          <Text style={[styles.navBtnText, { fontSize: 15 * s }]}>historique</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
