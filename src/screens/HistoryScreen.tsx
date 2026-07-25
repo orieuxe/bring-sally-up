@@ -112,7 +112,7 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const chartWidth = screenWidth - 40;
   const chartHeight = scale(CHART_HEIGHT);
-  const pad = { l: 32, r: 0, t: 4, b: 22 };
+  const pad = { l: 24, r: 12, t: 4, b: 22 };
 
   const scatterPoints = useMemo(() => {
     if (chartData.length < 2) return { points: [], trend: "", avgY: 0, maxY: 0, minY: 0, minX: 0, maxX: 0 };
@@ -199,7 +199,7 @@ export default function HistoryScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={[styles.backLink, { fontSize: ms(13), paddingHorizontal: scale(16), paddingVertical: scale(10), borderRadius: scale(20) }]}>← retour</Text>
+          <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
         </TouchableOpacity>
       </View>
 
@@ -277,7 +277,7 @@ export default function HistoryScreen({ navigation }: Props) {
                   return (
                     <React.Fragment key={`y-${val}`}>
                       <Line x1={pad.l} y1={y} x2={chartWidth - pad.r} y2={y} stroke="#2a2a2a" strokeWidth={0.5} />
-                      <SvgText x={pad.l - 4} y={y + 4} fill="#777" fontSize={10} textAnchor="end">{formatTime(val)}</SvgText>
+                      <SvgText x={pad.l - 4} y={y + 4} fill="#888" fontSize={ms(10, 0.8)} textAnchor="end">{formatTime(val)}</SvgText>
                     </React.Fragment>
                   );
                 });
@@ -290,8 +290,8 @@ export default function HistoryScreen({ navigation }: Props) {
                 const lDate = last.date.slice(5);
                 return (
                   <>
-                    <SvgText x={pad.l} y={chartHeight - 6} fill="#777" fontSize={10} textAnchor="start">{fDate}</SvgText>
-                    <SvgText x={chartWidth - pad.r} y={chartHeight - 6} fill="#777" fontSize={10} textAnchor="end">{lDate}</SvgText>
+                    <SvgText x={pad.l} y={chartHeight - 6} fill="#888" fontSize={ms(10, 0.8)} textAnchor="start">{fDate}</SvgText>
+                    <SvgText x={chartWidth - pad.r} y={chartHeight - 6} fill="#888" fontSize={ms(10, 0.8)} textAnchor="end">{lDate}</SvgText>
                   </>
                 );
               })()}
@@ -336,7 +336,9 @@ export default function HistoryScreen({ navigation }: Props) {
         <View style={styles.sessionsCard}>
         {filtered.map((item, i) => (
           <View key={i} style={[styles.row, i === filtered.length - 1 && styles.rowLast]}>
-            <Text style={[styles.rowDate, { fontSize: ms(12) }]}>{item.date}</Text>
+            <Text style={[styles.rowDate, { fontSize: ms(12) }]}>
+              {new Date(item.date).toLocaleDateString("fr", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+            </Text>
             <Text style={[styles.rowTime, { fontSize: ms(14) }]}>{formatTime(item.duration ?? 0)}</Text>
             <View style={styles.rowBar}>
               <View style={[styles.barFill, { width: `${Math.min(100, ((item.duration ?? 0) / (stats.max || 1)) * 100)}%`, backgroundColor: item.completed ? "#e2b714" : "#444" }]} />
@@ -367,11 +369,7 @@ export default function HistoryScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
-  backLink: {
-    fontSize: 13, color: "#aaa",
-    backgroundColor: "#1c1c22", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
-    overflow: "hidden",
-  },
+  backLink: { color: "#aaa" },
   trendHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 16, marginBottom: 8 },
   rangeRow: { flexDirection: "row", gap: 4 },
   rangeBtn: {
@@ -419,7 +417,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#222",
   },
   rowLast: { borderBottomWidth: 0 },
-  rowDate: { fontSize: 12, color: "#555", width: 85, fontVariant: ["tabular-nums"] },
+  rowDate: { color: "#555", fontVariant: ["tabular-nums"], minWidth: scale(85) },
   rowTime: { fontSize: 14, fontWeight: "500", color: "#ccc", width: 48, fontVariant: ["tabular-nums"] },
   rowBar: { flex: 1, height: 3, backgroundColor: "#1a1a1a", borderRadius: 2, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 2 },
