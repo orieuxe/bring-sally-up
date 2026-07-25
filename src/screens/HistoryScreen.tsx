@@ -109,9 +109,9 @@ export default function HistoryScreen({ navigation }: Props) {
       .sort((a, b) => a.ts - b.ts);
   }, [filtered]);
 
-  const chartWidth = screenWidth - 64;
+  const chartWidth = screenWidth - 48;
   const chartHeight = CHART_HEIGHT;
-  const pad = { l: 38, r: 4, t: 12, b: 30 };
+  const pad = { l: 34, r: 2, t: 8, b: 26 };
 
   const scatterPoints = useMemo(() => {
     if (chartData.length < 2) return { points: [], trend: "", avgY: 0, maxY: 0, minY: 0, minX: 0, maxX: 0 };
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 9, color: "#555" },
   // Chart
   chartSection: {
-    marginTop: 8, backgroundColor: "#1c1c22", borderRadius: 16, padding: 12,
+    marginTop: 8, backgroundColor: "#1c1c22", borderRadius: 16, padding: 8,
     shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 3,
   },
   // List rows
