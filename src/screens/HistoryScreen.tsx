@@ -357,7 +357,11 @@ export default function HistoryScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
-  backLink: { fontSize: 12, color: "#555" },
+  backLink: {
+    fontSize: 13, color: "#aaa",
+    backgroundColor: "#1c1c22", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
+    overflow: "hidden",
+  },
   trendHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 16, marginBottom: 8 },
   rangeRow: { flexDirection: "row", gap: 4 },
   rangeBtn: {
