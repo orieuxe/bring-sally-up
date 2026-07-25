@@ -111,7 +111,7 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const chartWidth = screenWidth - 64;
   const chartHeight = CHART_HEIGHT;
-  const pad = { l: 44, r: 10, t: 12, b: 30 };
+  const pad = { l: 38, r: 4, t: 12, b: 30 };
 
   const scatterPoints = useMemo(() => {
     if (chartData.length < 2) return { points: [], trend: "", avgY: 0, maxY: 0, minY: 0, minX: 0, maxX: 0 };
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   heatCell: { width: 36, height: 36, borderRadius: 4, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   heatCellText: { fontSize: 10, color: "#333" },
   heatCellTextActive: { color: "#fff", fontWeight: "600" },
-  legend: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 4, marginBottom: 8, paddingLeft: 8 },
+  legend: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 4, marginBottom: 8 },
   legendBox: { width: 12, height: 12, borderRadius: 2 },
   legendText: { fontSize: 9, color: "#555" },
   // Chart
