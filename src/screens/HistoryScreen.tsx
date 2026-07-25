@@ -221,14 +221,16 @@ export default function HistoryScreen({ navigation }: Props) {
                   <Text style={styles.monthLabel}>{hm.monthLabel}</Text>
                   <View style={styles.heatmapGrid}>
                     {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-                      <View key={i} style={styles.dayLabelCell}><Text style={styles.dayLabel}>{d}</Text></View>
+                      <View key={i} style={[styles.dayLabelCell, { width: scale(36), height: scale(14) }]}>
+                        <Text style={[styles.dayLabel, { fontSize: ms(9) }]}>{d}</Text>
+                      </View>
                     ))}
                     {Array.from({ length: hm.firstDow === 0 ? 6 : hm.firstDow - 1 }).map((_, i) => (
-                      <View key={`pad-${hm.offset}-${i}`} style={styles.heatCell} />
+                      <View key={`pad-${hm.offset}-${i}`} style={[styles.heatCell, { width: scale(36), height: scale(36), borderRadius: scale(4) }]} />
                     ))}
                     {hm.cells.map((c: { day: number; score: number; label: string }) => (
-                      <View key={c.label} style={[styles.heatCell, { backgroundColor: getHeatColor(c.score) }]}>
-                        <Text style={[styles.heatCellText, c.score > 0 && styles.heatCellTextActive]}>{c.day}</Text>
+                      <View key={c.label} style={[styles.heatCell, { backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4) }]}>
+                        <Text style={[styles.heatCellText, c.score > 0 && styles.heatCellTextActive, { fontSize: ms(10) }]}>{c.day}</Text>
                       </View>
                     ))}
                   </View>
@@ -393,11 +395,11 @@ const styles = StyleSheet.create({
   // Heatmap
   heatPage: { alignItems: "center", paddingTop: 4 },
   monthLabel: { fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, fontWeight: "600", marginBottom: 6 },
-  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", width: 7 * 36 + 6 * 3, gap: 3, alignSelf: "center" },
-  dayLabelCell: { width: 36, height: 14, alignItems: "center", justifyContent: "center", marginBottom: 1 },
-  dayLabel: { fontSize: 9, color: "#444" },
-  heatCell: { width: 36, height: 36, borderRadius: 4, alignItems: "center", justifyContent: "center", overflow: "hidden" },
-  heatCellText: { fontSize: 10, color: "#333" },
+  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", gap: 3, alignSelf: "center" },
+  dayLabelCell: { alignItems: "center", justifyContent: "center", marginBottom: 1 },
+  dayLabel: { color: "#444" },
+  heatCell: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  heatCellText: { color: "#333" },
   heatCellTextActive: { color: "#fff", fontWeight: "600" },
   legend: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 4, marginBottom: 8 },
   legendBox: { width: 12, height: 12, borderRadius: 2 },
