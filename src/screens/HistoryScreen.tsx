@@ -218,7 +218,7 @@ export default function HistoryScreen({ navigation }: Props) {
               }}
               renderItem={({ item: hm }: { item: ReturnType<typeof getMonthData> }) => (
                 <View style={styles.heatPage}>
-                  <Text style={styles.monthLabel}>{hm.monthLabel}</Text>
+                  <Text style={[styles.monthLabel, { fontSize: ms(14, 0.8) }]}>{hm.monthLabel}</Text>
                   <View style={[styles.heatmapGrid, { width: scale(270) }]}>
                     {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
                       <View key={i} style={[styles.dayLabelCell, { width: scale(36), height: scale(14) }]}>
@@ -240,12 +240,12 @@ export default function HistoryScreen({ navigation }: Props) {
           </View>
         )}
         <View style={styles.legend}>
-          <Text style={styles.legendText}>bas</Text>
+          <Text style={[styles.legendText, { fontSize: ms(10, 0.8) }]}>bas</Text>
           <View style={[styles.legendBox, { backgroundColor: "#542e2e" }]} />
           <View style={[styles.legendBox, { backgroundColor: "#7a4a1e" }]} />
           <View style={[styles.legendBox, { backgroundColor: "#4a6e2a" }]} />
           <View style={[styles.legendBox, { backgroundColor: "#38a636" }]} />
-          <Text style={styles.legendText}>haut</Text>
+          <Text style={[styles.legendText, { fontSize: ms(10, 0.8) }]}>haut</Text>
         </View>
 
         {/* Trend chart */}
