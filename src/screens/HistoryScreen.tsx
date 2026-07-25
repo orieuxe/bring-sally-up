@@ -219,7 +219,7 @@ export default function HistoryScreen({ navigation }: Props) {
               renderItem={({ item: hm }: { item: ReturnType<typeof getMonthData> }) => (
                 <View style={styles.heatPage}>
                   <Text style={styles.monthLabel}>{hm.monthLabel}</Text>
-                  <View style={styles.heatmapGrid}>
+                  <View style={[styles.heatmapGrid, { width: 7 * scale(36) + 6 * 3 }]}>
                     {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
                       <View key={i} style={[styles.dayLabelCell, { width: scale(36), height: scale(14) }]}>
                         <Text style={[styles.dayLabel, { fontSize: ms(9) }]}>{d}</Text>
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   // Heatmap
   heatPage: { alignItems: "center", paddingTop: 4 },
   monthLabel: { fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, fontWeight: "600", marginBottom: 6 },
-  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", gap: 3, alignSelf: "center" },
+  heatmapGrid: { flexDirection: "row", flexWrap: "wrap", gap: 3 },
   dayLabelCell: { alignItems: "center", justifyContent: "center", marginBottom: 1 },
   dayLabel: { color: "#444" },
   heatCell: { alignItems: "center", justifyContent: "center", overflow: "hidden" },
