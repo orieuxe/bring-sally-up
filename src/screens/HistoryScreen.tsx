@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Carousel } from "react-native-reanimated-carousel";
+import { moderateScale as ms, scale } from "react-native-size-matters";
 import Svg, { Circle, Line, Polyline, Rect, Text as SvgText } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
@@ -33,7 +34,6 @@ export default function HistoryScreen({ navigation }: Props) {
   const [range, setRange] = useState<Range>("1M");
   const [monthOffset, setMonthOffset] = useState(0);
   const { width: screenWidth } = useWindowDimensions();
-  const s = Math.min(1.5, Math.max(0.7, screenWidth / 390));
 
   // Heatmap generator
   const getMonthData = (offset: number) => {
@@ -111,7 +111,7 @@ export default function HistoryScreen({ navigation }: Props) {
   }, [filtered]);
 
   const chartWidth = screenWidth - 40;
-  const chartHeight = CHART_HEIGHT * s;
+  const chartHeight = scale(CHART_HEIGHT);
   const pad = { l: 32, r: 0, t: 4, b: 22 };
 
   const scatterPoints = useMemo(() => {
@@ -199,16 +199,16 @@ export default function HistoryScreen({ navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={[styles.backLink, { fontSize: 13 * s, paddingHorizontal: 16 * s, paddingVertical: 10 * s, borderRadius: 20 * s }]}>← retour</Text>
+          <Text style={[styles.backLink, { fontSize: ms(13), paddingHorizontal: scale(16), paddingVertical: scale(10), borderRadius: scale(20) }]}>← retour</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Calendar carousel — independent, always all data */}
         {allMonths.length > 0 && (
-          <View style={{ height: 260 * s }}>
+          <View style={{ height: scale(260) }}>
             <Carousel
-              style={{ width: screenWidth, height: 260 * s }}
+              style={{ width: screenWidth, height: scale(260) }}
               data={allMonths}
               defaultIndex={11}
               itemSize={Math.min(screenWidth - 60, 340)}
@@ -255,7 +255,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 {(["1M", "6M", "1Y", "ALL"] as Range[]).map((r) => (
                   <TouchableOpacity
                     key={r}
-                    style={[styles.rangeBtn, { paddingHorizontal: 12 * s, paddingVertical: 5 * s, borderRadius: 6 * s }, range === r && styles.rangeBtnActive]}
+                    style={[styles.rangeBtn, { paddingHorizontal: scale(12), paddingVertical: scale(5), borderRadius: scale(6) }, range === r && styles.rangeBtnActive]}
                     onPress={() => setRange(r)}
                   >
                     <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>{r}</Text>
@@ -318,24 +318,24 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* Stats row */}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{stats.count}</Text>
-            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>sessions</Text>
+            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{stats.count}</Text>
+            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>sessions</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{formatTime(Math.round(stats.avg))}</Text>
-            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>moyenne</Text>
+            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(Math.round(stats.avg))}</Text>
+            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>moyenne</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: 22 * s }]}>{formatTime(stats.max)}</Text>
-            <Text style={[styles.statLabel, { fontSize: 10 * s }]}>record</Text>
+            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(stats.max)}</Text>
+            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>record</Text>
           </View>
         </View>
 
         <View style={styles.sessionsCard}>
         {filtered.map((item, i) => (
           <View key={i} style={[styles.row, i === filtered.length - 1 && styles.rowLast]}>
-            <Text style={[styles.rowDate, { fontSize: 12 * s }]}>{item.date}</Text>
-            <Text style={[styles.rowTime, { fontSize: 14 * s }]}>{formatTime(item.duration ?? 0)}</Text>
+            <Text style={[styles.rowDate, { fontSize: ms(12) }]}>{item.date}</Text>
+            <Text style={[styles.rowTime, { fontSize: ms(14) }]}>{formatTime(item.duration ?? 0)}</Text>
             <View style={styles.rowBar}>
               <View style={[styles.barFill, { width: `${Math.min(100, ((item.duration ?? 0) / (stats.max || 1)) * 100)}%`, backgroundColor: item.completed ? "#e2b714" : "#444" }]} />
             </View>
@@ -345,16 +345,16 @@ export default function HistoryScreen({ navigation }: Props) {
 
         <View style={styles.bottomRow}>
           <TouchableOpacity
-            style={[styles.clearBtn, { paddingHorizontal: 24 * s, paddingVertical: 12 * s, borderRadius: 24 * s }]}
+            style={[styles.clearBtn, { paddingHorizontal: scale(24), paddingVertical: scale(12), borderRadius: scale(24) }]}
             onPress={handleClear}
           >
-            <Text style={[styles.clearBtnText, { fontSize: 13 * s }]}>effacer</Text>
+            <Text style={[styles.clearBtnText, { fontSize: ms(13) }]}>effacer</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.clearBtn, { paddingHorizontal: 24 * s, paddingVertical: 12 * s, borderRadius: 24 * s }]}
+            style={[styles.clearBtn, { paddingHorizontal: scale(24), paddingVertical: scale(12), borderRadius: scale(24) }]}
             onPress={() => navigation.navigate("Import")}
           >
-            <Text style={[styles.clearBtnText, { fontSize: 13 * s }]}>importer</Text>
+            <Text style={[styles.clearBtnText, { fontSize: ms(13) }]}>importer</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
