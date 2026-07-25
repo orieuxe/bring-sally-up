@@ -33,6 +33,7 @@ export default function HistoryScreen({ navigation }: Props) {
   const [history, setHistory] = useState<Attempt[]>([]);
   const [range, setRange] = useState<Range>("1M");
   const [monthOffset, setMonthOffset] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<{ date: string; duration: number } | null>(null);
   const { width: screenWidth } = useWindowDimensions();
 
   // Heatmap generator
@@ -229,9 +230,14 @@ export default function HistoryScreen({ navigation }: Props) {
                       <View key={`pad-${hm.offset}-${i}`} style={[styles.heatCell, { width: scale(36), height: scale(36), borderRadius: scale(4) }]} />
                     ))}
                     {hm.cells.map((c: { day: number; score: number; label: string }) => (
-                      <View key={c.label} style={[styles.heatCell, { backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4) }]}>
+                      <TouchableOpacity
+                        key={c.label}
+                        style={[styles.heatCell, { backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4) }]}
+                        onPress={() => c.score > 0 ? setSelectedDay({ date: c.label, duration: c.score }) : setSelectedDay(null)}
+                        activeOpacity={c.score > 0 ? 0.7 : 1}
+                      >
                         <Text style={[styles.heatCellText, c.score > 0 && styles.heatCellTextActive, { fontSize: ms(10) }]}>{c.day}</Text>
-                      </View>
+                      </TouchableOpacity>
                     ))}
                   </View>
                 </View>
@@ -239,14 +245,39 @@ export default function HistoryScreen({ navigation }: Props) {
             />
           </View>
         )}
-        <View style={styles.legend}>
-          <Text style={[styles.legendText, { fontSize: ms(10, 0.8) }]}>bas</Text>
-          <View style={[styles.legendBox, { backgroundColor: "#542e2e" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#7a4a1e" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#4a6e2a" }]} />
-          <View style={[styles.legendBox, { backgroundColor: "#38a636" }]} />
-          <Text style={[styles.legendText, { fontSize: ms(10, 0.8) }]}>haut</Text>
-        </View>
+        {/* Day tooltip */}
+        {selectedDay && (
+          <View style={styles.tooltip}>
+            <Text style={styles.tooltipDate}>
+              {new Date(selectedDay.date).toLocaleDateString("fr", { weekday: "short", day: "numeric", month: "long" })}
+            </Text>
+            <View style={styles.tooltipRow}>
+              <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
+              <Text style={styles.tooltipLabel}>temps</Text>
+            </View>
+            <View style={styles.tooltipRow}>
+              <Text style={styles.tooltipVal}>
+                {(() => {
+                  const reps = Math.round((selectedDay.duration ?? 0) / 3.4);
+                  return `${reps} reps`;
+                })()}
+              </Text>
+              <Text style={styles.tooltipLabel}>estimé</Text>
+            </View>
+            <View style={styles.tooltipRow}>
+              <Text style={[styles.tooltipVal, {
+                color: (selectedDay.duration ?? 0) >= stats.avg ? "#4caf50" : "#e25a5a",
+              }]}>
+                {(() => {
+                  if (stats.avg === 0) return "--";
+                  const pct = Math.round(((selectedDay.duration ?? 0) / stats.avg - 1) * 100);
+                  return pct >= 0 ? `+${pct}%` : `${pct}%`;
+                })()}
+              </Text>
+              <Text style={styles.tooltipLabel}>vs moyenne</Text>
+            </View>
+          </View>
+        )}
 
         {/* Trend chart */}
         {chartData.length >= 2 && (
@@ -400,8 +431,14 @@ const styles = StyleSheet.create({
   heatCellText: { color: "#333" },
   heatCellTextActive: { color: "#fff", fontWeight: "600" },
   legend: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 4, marginBottom: 8 },
-  legendBox: { width: 12, height: 12, borderRadius: 2 },
-  legendText: { fontSize: 9, color: "#555" },
+  tooltip: {
+    backgroundColor: "#1c1c22", borderRadius: 12, padding: 14, marginBottom: 8,
+    flexDirection: "row", justifyContent: "space-around",
+  },
+  tooltipDate: { fontSize: ms(11), color: "#888", marginBottom: 4, textAlign: "center" },
+  tooltipRow: { alignItems: "center" },
+  tooltipVal: { fontSize: ms(18), fontWeight: "600", color: "#fff" },
+  tooltipLabel: { fontSize: ms(9), color: "#555", marginTop: 2 },
   // Chart
   chartSection: {
     marginTop: 4, backgroundColor: "#1c1c22", borderRadius: 16, padding: 6,
