@@ -26,8 +26,7 @@ function formatTime(s: number) {
   return `${m}:${sec}`;
 }
 
-const chartWidth = 340;
-const chartHeight = 170;
+const CHART_HEIGHT = 170;
 
 export default function HistoryScreen({ navigation }: Props) {
   const [history, setHistory] = useState<Attempt[]>([]);
@@ -110,6 +109,8 @@ export default function HistoryScreen({ navigation }: Props) {
       .sort((a, b) => a.ts - b.ts);
   }, [filtered]);
 
+  const chartWidth = screenWidth - 32;
+  const chartHeight = CHART_HEIGHT;
   const pad = { l: 44, r: 10, t: 12, b: 30 };
 
   const scatterPoints = useMemo(() => {
@@ -272,8 +273,8 @@ export default function HistoryScreen({ navigation }: Props) {
                   const y = pad.t + (1 - (val - yMin) / (yMax - yMin || 1)) * (chartHeight - pad.t - pad.b);
                   return (
                     <React.Fragment key={`y-${val}`}>
-                      <Line x1={pad.l} y1={y} x2={chartWidth - pad.r} y2={y} stroke="#222" strokeWidth={0.5} />
-                      <SvgText x={pad.l - 4} y={y + 4} fill="#444" fontSize={9} textAnchor="end">{formatTime(val)}</SvgText>
+                      <Line x1={pad.l} y1={y} x2={chartWidth - pad.r} y2={y} stroke="#2a2a2a" strokeWidth={0.5} />
+                      <SvgText x={pad.l - 4} y={y + 4} fill="#777" fontSize={10} textAnchor="end">{formatTime(val)}</SvgText>
                     </React.Fragment>
                   );
                 });
@@ -286,8 +287,8 @@ export default function HistoryScreen({ navigation }: Props) {
                 const lDate = last.date.slice(5);
                 return (
                   <>
-                    <SvgText x={pad.l} y={chartHeight - 6} fill="#444" fontSize={9} textAnchor="start">{fDate}</SvgText>
-                    <SvgText x={chartWidth - pad.r} y={chartHeight - 6} fill="#444" fontSize={9} textAnchor="end">{lDate}</SvgText>
+                    <SvgText x={pad.l} y={chartHeight - 6} fill="#777" fontSize={10} textAnchor="start">{fDate}</SvgText>
+                    <SvgText x={chartWidth - pad.r} y={chartHeight - 6} fill="#777" fontSize={10} textAnchor="end">{lDate}</SvgText>
                   </>
                 );
               })()}

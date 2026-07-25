@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5cd51cce-f78c-49ca-af39-2ff7c4425836" name="Changes" comment="" />
+    <list default="true" id="5cd51cce-f78c-49ca-af39-2ff7c4425836" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/src/screens/HistoryScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HistoryScreen.tsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -77,7 +79,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1784997709098</updated>
-      <workItem from="1784997710108" duration="16685000" />
+      <workItem from="1784997710108" duration="17363000" />
     </task>
     <servers />
   </component>
