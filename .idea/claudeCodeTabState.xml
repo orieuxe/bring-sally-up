@@ -7,9 +7,9 @@
           <value>
             <TabSessionState>
               <option name="provider" value="claude" />
-              <option name="sessionId" value="e0fd5515-3de6-446a-81ed-e7e49976c3b0" />
+              <option name="sessionId" value="45b559dc-b930-435d-beb3-adc3c188c2c9" />
               <option name="cwd" value="$PROJECT_DIR$" />
-              <option name="model" value="claude-sonnet-4-6" />
+              <option name="model" value="claude-haiku-4-5" />
               <option name="permissionMode" value="bypassPermissions" />
             </TabSessionState>
           </value>

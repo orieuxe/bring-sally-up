@@ -14,7 +14,7 @@ import type { StackNavigationProp } from "@react-navigation/stack";
 import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from "../data/cues";
 import { getCustomCues, getHistory } from "../storage";
 import type { Cue, RootStackParamList } from "../types";
-import { scoreColor } from "../utils/color";
+import { scoreColor, ACCENT } from "../utils/color";
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, "Challenge">;
@@ -22,7 +22,7 @@ type Props = {
 
 type Phase = "running" | "finished";
 
-const TIMER_OFFSET = 1;
+const TIMER_OFFSET = 6;
 const CUE_DELAY = -0.25;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -236,14 +236,14 @@ export default function ChallengeScreen({ navigation }: Props) {
 
           <View style={styles.adjustRow}>
             <TouchableOpacity style={[styles.adjustBtn, { width: scale(40), height: scale(40), borderRadius: scale(20) }]} onPress={() => { setAdjustedTime((t) => Math.max(0, t - 1)); setSaveMsg(""); }}>
-              <Text style={[styles.adjustBtnText, { fontSize: ms(20) }]}>−</Text>
+              <Text style={[styles.adjustBtnText, { fontSize: ms(20), lineHeight: scale(40), textAlign: "center" }]}>−</Text>
             </TouchableOpacity>
             <Text style={[styles.resultTime, { fontSize: ms(54), color: scoreColor(adjustedTime, recentAvg) }]}>
               {Math.floor(adjustedTime / 60)}:
               {(adjustedTime % 60).toString().padStart(2, "0")}
             </Text>
             <TouchableOpacity style={[styles.adjustBtn, { width: scale(40), height: scale(40), borderRadius: scale(20), opacity: adjustedTime >= Math.floor(elapsed - TIMER_OFFSET) ? 0.3 : 1 }]} disabled={adjustedTime >= Math.floor(elapsed - TIMER_OFFSET)} onPress={() => { setAdjustedTime((t) => Math.min(t + 1, Math.floor(elapsed - TIMER_OFFSET))); setSaveMsg(""); }}>
-              <Text style={[styles.adjustBtnText, { fontSize: ms(20) }]}>+</Text>
+              <Text style={[styles.adjustBtnText, { fontSize: ms(20), lineHeight: scale(40), textAlign: "center" }]}>+</Text>
             </TouchableOpacity>
           </View>
 
@@ -283,9 +283,9 @@ const styles = StyleSheet.create({
   adjustRow: { flexDirection: "row", alignItems: "center", gap: scale(16), marginBottom: scale(12) },
   adjustBtn: { width: scale(52), height: scale(52), borderRadius: scale(26), backgroundColor: "#222", alignItems: "center", justifyContent: "center" },
   adjustBtnText: { fontSize: ms(24), color: "#aaa", fontWeight: "600" },
-  recordMsg: { fontSize: ms(14), color: "#e2b714", fontWeight: "600", marginBottom: scale(4) },
+  recordMsg: { fontSize: ms(14), color: ACCENT, fontWeight: "600", marginBottom: scale(4) },
   saveMsg: { fontSize: ms(12), color: "#e25a5a", marginBottom: scale(16) },
-  saveBtn: { backgroundColor: "#e2b714", paddingHorizontal: scale(60), paddingVertical: scale(16), borderRadius: scale(30), marginBottom: scale(10) },
+  saveBtn: { backgroundColor: ACCENT, paddingHorizontal: scale(60), paddingVertical: scale(16), borderRadius: scale(30), marginBottom: scale(10) },
   saveBtnText: { fontSize: ms(18), fontWeight: "700", color: "#16161a" },
   ignoreBtn: { padding: scale(12) },
   ignoreBtnText: { fontSize: ms(13), color: "#444" },
