@@ -214,7 +214,9 @@ export default function HistoryScreen({ navigation }: Props) {
               style={{ width: screenWidth, height: scale(260) }}
               data={allMonths}
               defaultIndex={11}
-              itemSize={Math.min(screenWidth - 60, scale(340))}
+              width={screenWidth * 0.78}
+              mode="parallax"
+              modeConfig={{ parallaxScrollingOffset: screenWidth * 0.25, parallaxScrollingScale: 0.92 }}
               onSnapToItem={(idx: number) => {
                 setMonthOffset(idx - 11);
                 setRange("1M");
@@ -260,17 +262,14 @@ export default function HistoryScreen({ navigation }: Props) {
               </Text>
             </View>
             <View style={styles.tooltipRow}>
-              <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
-              <Text style={styles.tooltipLabel}>temps</Text>
+              <Text style={styles.tooltipVal}>
+                {(() => Math.round((selectedDay.duration ?? 0) / 3.4))()}
+              </Text>
+              <Text style={styles.tooltipLabel}>reps</Text>
             </View>
             <View style={styles.tooltipRow}>
-              <Text style={styles.tooltipVal}>
-                {(() => {
-                  const reps = Math.round((selectedDay.duration ?? 0) / 3.4);
-                  return `${reps} reps`;
-                })()}
-              </Text>
-              <Text style={styles.tooltipLabel}>estimé</Text>
+              <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
+              <Text style={styles.tooltipLabel}>temps</Text>
             </View>
             <View style={styles.tooltipRow}>
               <Text style={[styles.tooltipVal, {
