@@ -7,7 +7,7 @@ import {
   Platform,
   Vibration,
 } from "react-native";
-import { Audio, AVPlaybackSource } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { saveCustomCues } from "../storage";
 import type { RootStackParamList, Cue } from "../types";
@@ -17,34 +17,32 @@ type Props = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const audioSource: AVPlaybackSource = require("../../assets/sally.mp3");
+const audioSource = require("../../assets/sally.mp3");
 
 export default function CalibrateScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<"ready" | "playing" | "done">("ready");
   const [taps, setTaps] = useState<number[]>([]);
   const [elapsed, setElapsed] = useState(0);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
-      if (soundRef.current) soundRef.current.unloadAsync();
+      if (playerRef.current) playerRef.current.remove();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  const startCalibration = async () => {
+  const startCalibration = () => {
     setPhase("playing");
     setTaps([]);
     setElapsed(0);
 
     try {
-      const { sound: s } = await Audio.Sound.createAsync(audioSource, {
-        shouldPlay: true,
-        isLooping: false,
-      });
-      soundRef.current = s;
+      const player = createAudioPlayer(audioSource);
+      playerRef.current = player;
+      player.play();
     } catch {
       // No audio
     }
@@ -63,7 +61,7 @@ export default function CalibrateScreen({ navigation }: Props) {
 
   const finish = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (soundRef.current) soundRef.current.stopAsync();
+    if (playerRef.current) playerRef.current.pause();
     setPhase("done");
 
     // Convert taps to cues: first tap = up, second = down, etc.
