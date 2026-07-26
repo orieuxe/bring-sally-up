@@ -1,14 +1,26 @@
-const COLORS = ["#1a1a1a", "#3d2020", "#6b3812", "#3d5c20", "#2d8f2d"];
+export const ACCENT = "#b76d0c";
 
-const STOPS = [
-  { r: 0.20, color: [0x54, 0x2e, 0x2e] },  // red   @ ratio 0.2
-  { r: 0.50, color: [0x7a, 0x4a, 0x1e] },  // orange @ ratio 0.5
-  { r: 0.85, color: [0x4a, 0x6e, 0x2a] },  // olive  @ ratio 0.85
-  { r: 1.20, color: [0x38, 0xa6, 0x36] },  // green  @ ratio 1.2
+function hexToRgb(hex: string): number[] {
+  const v = parseInt(hex.replace("#", ""), 16);
+  return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+}
+
+const _accentRgb = hexToRgb(ACCENT);
+export const ACCENT_RGB = `${_accentRgb[0]},${_accentRgb[1]},${_accentRgb[2]}`;
+const PALETTE = [
+  "#413333",
+  "#8f3a31",
+  "#789b72",
+  "#3eb916",
+  "#ffeb07"
 ];
+const STOPS = PALETTE.map((h, i) => ({
+  r: 0.20 + (i / (PALETTE.length - 1)) * 1.30,
+  color: hexToRgb(h),
+}));
 
 export function scoreColor(score: number, avg: number): string {
-  if (score === 0 || avg <= 0) return COLORS[0];
+  if (score === 0 || avg <= 0) return "#1a1a1a";
   const ratio = Math.min(score / avg, 1.5);
 
   let lo = STOPS[0], hi = STOPS[STOPS.length - 1];

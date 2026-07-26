@@ -11,7 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getHistory } from "../storage";
 import type { RootStackParamList, Attempt } from "../types";
-import { scoreColor } from "../utils/color";
+import { scoreColor, ACCENT, ACCENT_RGB } from "../utils/color";
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, "Home"> };
 
@@ -76,7 +76,7 @@ export default function HomeScreen({ navigation }: Props) {
           style={[styles.goBtn, { width: scale(110), height: scale(110), borderRadius: scale(55) }]}
           onPress={() => navigation.navigate("Challenge")}
         >
-          <Text style={[styles.goBtnIcon, { fontSize: ms(36) }]}>▶</Text>
+          <Text style={[styles.goBtnIcon, { fontSize: ms(36), lineHeight: scale(110), textAlign: "center" }]}>▶</Text>
         </TouchableOpacity>
       </View>
 
@@ -97,8 +97,8 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   scrollContent: { flexGrow: 1, padding: 20, justifyContent: "center" },
-  logo: { fontWeight: "700", color: "#e2b714", letterSpacing: 4 },
-  streak: { color: "#e2b714" },
+  logo: { fontWeight: "700", color: ACCENT, letterSpacing: 4 },
+  streak: { color: ACCENT },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   scoresRow: { flexDirection: "row", marginBottom: 32 },
   scoreBox: {
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
   scoreValue: { fontWeight: "300", color: "#fff", letterSpacing: 2, fontVariant: ["tabular-nums"] },
   scoreDate: { color: "#555", marginTop: 4 },
   goBtn: {
-    backgroundColor: "#e2b714", alignItems: "center", justifyContent: "center",
-    boxShadow: "0 4px 12px rgba(226,183,20,0.4)", elevation: 8,
+    backgroundColor: ACCENT, alignItems: "center", justifyContent: "center",
+    boxShadow: `0 4px 12px rgba(${ACCENT_RGB},0.4)`, elevation: 8,
   },
   goBtnIcon: { color: "#16161a" },
   bottom: { flexDirection: "row", justifyContent: "center", paddingBottom: 20, paddingTop: 16 },

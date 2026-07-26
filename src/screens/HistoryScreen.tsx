@@ -15,7 +15,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getHistory, clearHistory } from "../storage";
 import type { Attempt, RootStackParamList } from "../types";
-import { scoreColor } from "../utils/color";
+import { scoreColor, ACCENT } from "../utils/color";
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, "History"> };
 const RANGES = ["1M", "6M", "1Y", "ALL"] as const;
@@ -327,7 +327,7 @@ export default function HistoryScreen({ navigation }: Props) {
                         key={c.label}
                         style={[styles.heatCell, {
                           backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4),
-                          ...(selectedDay?.date === c.label && c.score > 0 ? { borderWidth: 2, borderColor: "#e2b714" } : {}),
+                          ...(selectedDay?.date === c.label && c.score > 0 ? { borderWidth: 2, borderColor: ACCENT } : {}),
                         }]}
                         onPress={() => c.score > 0 ? setSelectedDay({ date: c.label, duration: c.score }) : setSelectedDay(null)}
                         activeOpacity={c.score > 0 ? 0.7 : 1}
@@ -417,7 +417,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 stroke="#333" strokeWidth={1} strokeDasharray="4,4"
               />
               {/* Trend curve */}
-              <Polyline points={scatterPoints.linePath} fill="none" stroke="#e2b714" strokeWidth={1} opacity={0.5} />
+              <Polyline points={scatterPoints.linePath} fill="none" stroke={ACCENT} strokeWidth={1} opacity={0.5} />
               {/* Scatter points */}
               {chartData.map((d, i) => {
                 const x = pad.l + ((d.ts - scatterPoints.minX) / (scatterPoints.maxX - scatterPoints.minX || 1)) * (chartWidth - pad.l - pad.r);
@@ -434,7 +434,7 @@ export default function HistoryScreen({ navigation }: Props) {
                 const pt = chartData.find(d => d.date === selectedDay.date)!;
                 const x = pad.l + ((pt.ts - scatterPoints.minX) / (scatterPoints.maxX - scatterPoints.minX || 1)) * (chartWidth - pad.l - pad.r);
                 const y = pad.t + (1 - (pt.time - scatterPoints.minY) / ((scatterPoints.maxY - scatterPoints.minY) || 1)) * (chartHeight - pad.t - pad.b);
-                return <Circle cx={x} cy={y} r={4} fill="none" stroke="#e2b714" strokeWidth={2} />;
+                return <Circle cx={x} cy={y} r={4} fill="none" stroke={ACCENT} strokeWidth={2} />;
               })()}
             </Svg>
           </View>
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1c1c22", alignItems: "center",
     boxShadow: "0 1px 3px rgba(0,0,0,0.15)", elevation: 2,
   },
-  rangeBtnActive: { backgroundColor: "#e2b714" },
+  rangeBtnActive: { backgroundColor: ACCENT },
   rangeText: { fontSize: 13, color: "#555", fontWeight: "600" },
   rangeTextActive: { color: "#16161a" },
   content: { paddingHorizontal: 16, paddingBottom: 16 },

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { importRecords } from "../storage";
+import { ACCENT } from "../utils/color";
 import type { RootStackParamList, Attempt } from "../types";
 
 type Props = {
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     marginBottom: 16,
   },
-  button: { backgroundColor: "#e2b714", padding: 14, borderRadius: 8, alignItems: "center" },
+  button: { backgroundColor: ACCENT, padding: 14, borderRadius: 8, alignItems: "center" },
   buttonText: { fontSize: 14, fontWeight: "700", color: "#0d0d0d" },
   buttonDisabled: { opacity: 0.4 },
 });
