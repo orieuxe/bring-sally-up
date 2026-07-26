@@ -294,7 +294,7 @@ export default function HistoryScreen({ navigation }: Props) {
                   <TouchableOpacity
                     key={r}
                     style={[styles.rangeBtn, { paddingHorizontal: scale(12), paddingVertical: scale(5), borderRadius: scale(6) }, range === r && styles.rangeBtnActive]}
-                    onPress={() => { setRange(r); setSelectedDay(null); }}
+                    onPress={() => setRange(r)}
                   >
                     <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>
                       {{ "1M": "1 mois", "6M": "6 mois", "1Y": "1 an", ALL: "Tout" }[r]}
