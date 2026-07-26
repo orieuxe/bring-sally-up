@@ -1,8 +1,8 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Attempt, Cue } from "./types";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Attempt, Cue } from './types';
 
-const HISTORY_KEY = "@sally_history";
-const CUES_KEY = "@sally_cues";
+const HISTORY_KEY = '@sally_history';
+const CUES_KEY = '@sally_cues';
 
 export async function getHistory(): Promise<Attempt[]> {
   const raw = await AsyncStorage.getItem(HISTORY_KEY);
@@ -29,7 +29,7 @@ export async function importRecords(records: Attempt[]): Promise<Attempt[]> {
   const existing = await getHistory();
   const merged = [...existing];
   for (const r of records) {
-    if (!merged.find((e) => e.date === r.date)) {
+    if (!merged.find(e => e.date === r.date)) {
       merged.push(r);
     }
   }

@@ -5,10 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5cd51cce-f78c-49ca-af39-2ff7c4425836" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eslint.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/cues.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/cues.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/CalibrateScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/CalibrateScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HistoryScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HistoryScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/ImportScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ImportScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/utils/color.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/color.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -55,15 +63,18 @@
     "git-widget-placeholder": "main",
     "git.auto.fetch.suggestion.counter": "1",
     "javascript.preferred.runtime.type.id": "node",
+    "js.linters.configure.manually.selectedeslint": "true",
     "last_opened_file_path": "//wsl.localhost/Ubuntu-20.04/home/orieuxe/bring-sally-up",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.standard": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.jshint": "",
+    "node.js.selected.package.standard": "",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "web-ide.project.structure",
+    "settings.editor.selected.configurable": "settings.javascript.linters.eslint",
     "ts.external.directory.path": "\\\\wsl.localhost\\Ubuntu-20.04\\home\\orieuxe\\bring-sally-up\\node_modules\\typescript\\lib"
   }
 }]]></component>
@@ -98,7 +109,7 @@
       <workItem from="1785082277950" duration="562000" />
       <workItem from="1785082852019" duration="453000" />
       <workItem from="1785083322256" duration="1461000" />
-      <workItem from="1785084799827" duration="12170000" />
+      <workItem from="1785084799827" duration="13728000" />
     </task>
     <servers />
   </component>

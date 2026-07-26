@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,37 +8,37 @@ import {
   Alert,
   ScrollView,
   Platform,
-} from "react-native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import { importRecords } from "../storage";
-import { ACCENT } from "../utils/color";
-import type { RootStackParamList, Attempt } from "../types";
+} from 'react-native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import { importRecords } from '../storage';
+import { ACCENT } from '../utils/color';
+import type { RootStackParamList, Attempt } from '../types';
 
 type Props = {
-  navigation: StackNavigationProp<RootStackParamList, "Import">;
+  navigation: StackNavigationProp<RootStackParamList, 'Import'>;
 };
 
 export default function ImportScreen({ navigation }: Props) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState('');
 
   const parseRecords = (): Attempt[] => {
-    const lines = text.trim().split("\n").filter(Boolean);
+    const lines = text.trim().split('\n').filter(Boolean);
     const records: Attempt[] = [];
 
     for (const line of lines) {
       // Format: "YYYY-MM-DD M:SS" or "DD/MM/YYYY M:SS" or "DD/MM HH:MM:SS"
       let match = line.match(
-        /(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}\/\d{2})[\t\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/
+        /(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}\/\d{2})[\t\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/,
       );
       if (match) {
         let date = match[1];
         // If no year, infer from format DD/MM
         if (/^\d{2}\/\d{2}$/.test(date)) {
-          const [d, m] = date.split("/");
+          const [d, m] = date.split('/');
           const year = parseInt(m) >= 5 ? 2025 : 2026;
           date = `${year}-${m}-${d}`;
-        } else if (date.includes("/")) {
-          const [d, m, y] = date.split("/");
+        } else if (date.includes('/')) {
+          const [d, m, y] = date.split('/');
           date = `${y}-${m}-${d}`;
         }
         const minutes = parseInt(match[2], 10);
@@ -61,19 +61,19 @@ export default function ImportScreen({ navigation }: Props) {
   const handleImport = async () => {
     const records = parseRecords();
     if (records.length === 0) {
-      if (Platform.OS === "web") {
-        window.alert("Aucun record trouvé. Formats : date 1:08");
+      if (Platform.OS === 'web') {
+        window.alert('Aucun record trouvé. Formats : date 1:08');
       } else {
-        Alert.alert("Aucun record trouvé", "Formats : date 1:08");
+        Alert.alert('Aucun record trouvé', 'Formats : date 1:08');
       }
       return;
     }
 
     await importRecords(records);
-    if (Platform.OS === "web") {
+    if (Platform.OS === 'web') {
       window.alert(`${records.length} records importés.`);
     } else {
-      Alert.alert("Import réussi", `${records.length} records importés.`);
+      Alert.alert('Import réussi', `${records.length} records importés.`);
     }
     navigation.goBack();
   };
@@ -91,17 +91,22 @@ export default function ImportScreen({ navigation }: Props) {
       </View>
       <Text style={styles.title}>Importer des records</Text>
       <Text style={styles.help}>
-        Colle tes records texte ici.{"\n"}
-        Formats acceptés :{"\n"}
-        {"•"} 2026-07-25 1:08{"\n"}
-        {"•"} 25/07/2026 1:08{"\n"}
-        {"•"} 25/07 1:08 (année auto-détectée){"\n"}
+        Colle tes records texte ici.
+        {'\n'}
+        Formats acceptés :
+        {'\n'}
+        • 2026-07-25 1:08
+        {'\n'}
+        • 25/07/2026 1:08
+        {'\n'}
+        • 25/07 1:08 (année auto-détectée)
+        {'\n'}
         Une ligne par date
       </Text>
       <TextInput
         style={styles.input}
         multiline
-        placeholder={"2026-07-20 1:05\n2026-07-21 1:08\n2026-07-22 1:12"}
+        placeholder={'2026-07-20 1:05\n2026-07-21 1:08\n2026-07-22 1:12'}
         placeholderTextColor="#555"
         value={text}
         onChangeText={setText}
@@ -119,23 +124,45 @@ export default function ImportScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#16161a" },
+  container: {
+    flex: 1,
+    backgroundColor: '#16161a',
+  },
   content: { padding: 20 },
   header: { marginBottom: 12 },
-  backLink: { color: "#aaa" },
-  title: { fontSize: 24, fontWeight: "800", color: "#fff", marginBottom: 12 },
-  help: { fontSize: 13, color: "#888", lineHeight: 20, marginBottom: 16 },
+  backLink: { color: '#aaa' },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  help: {
+    fontSize: 13,
+    color: '#888',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
   input: {
-    backgroundColor: "#1a1a1a",
-    color: "#ccc",
+    backgroundColor: '#1a1a1a',
+    color: '#ccc',
     borderRadius: 10,
     padding: 16,
     fontSize: 14,
     minHeight: 200,
-    fontFamily: "monospace",
+    fontFamily: 'monospace',
     marginBottom: 16,
   },
-  button: { backgroundColor: ACCENT, padding: 14, borderRadius: 8, alignItems: "center" },
-  buttonText: { fontSize: 14, fontWeight: "700", color: "#0d0d0d" },
+  button: {
+    backgroundColor: ACCENT,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0d0d0d',
+  },
   buttonDisabled: { opacity: 0.4 },
 });
