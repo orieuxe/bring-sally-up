@@ -283,7 +283,6 @@ export default function HistoryScreen({ navigation }: Props) {
         {chartData.length >= 2 && (
           <View style={styles.chartSection}>
             <View style={styles.trendHeader}>
-              <Text style={styles.sectionTitle}>tendance</Text>
               <View style={styles.rangeRow}>
                 {(["1M", "6M", "1Y", "ALL"] as Range[]).map((r) => (
                   <TouchableOpacity
@@ -291,7 +290,9 @@ export default function HistoryScreen({ navigation }: Props) {
                     style={[styles.rangeBtn, { paddingHorizontal: scale(12), paddingVertical: scale(5), borderRadius: scale(6) }, range === r && styles.rangeBtnActive]}
                     onPress={() => setRange(r)}
                   >
-                    <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>{r}</Text>
+                    <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>
+                      {{ "1M": "1 mois", "6M": "6 mois", "1Y": "1 an", ALL: "Tout" }[r]}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -402,7 +403,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   backLink: { color: "#aaa" },
   trendHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 16, marginBottom: 8 },
-  rangeRow: { flexDirection: "row", gap: 4 },
+  rangeRow: { flexDirection: "row", gap: 4, justifyContent: "center" },
   rangeBtn: {
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6,
     backgroundColor: "#1c1c22",
@@ -420,7 +421,6 @@ const styles = StyleSheet.create({
   stat: { alignItems: "center" },
   statVal: { fontSize: 22, fontWeight: "500", color: "#fff", fontVariant: ["tabular-nums"] },
   statLabel: { fontSize: 10, color: "#555", textTransform: "uppercase", marginTop: 2 },
-  sectionTitle: { fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1 },
   // Heatmap
   heatPage: { alignItems: "center", paddingTop: 4 },
   monthLabel: { fontSize: 12, color: "#888", textTransform: "uppercase", letterSpacing: 1, fontWeight: "600", marginBottom: 6 },
