@@ -17,7 +17,9 @@ import { getHistory, clearHistory } from "../storage";
 import type { Attempt, RootStackParamList } from "../types";
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, "History"> };
-type Range = "1M" | "6M" | "1Y" | "ALL";
+const RANGES = ["1M", "6M", "1Y", "ALL"] as const;
+type Range = (typeof RANGES)[number];
+const RANGE_LABELS: Record<Range, string> = { "1M": "1 mois", "6M": "6 mois", "1Y": "1 an", ALL: "Tout" };
 
 const COLORS = ["#1a1a1a", "#3d2020", "#6b3812", "#3d5c20", "#2d8f2d"];
 
@@ -207,7 +209,7 @@ export default function HistoryScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Calendar carousel — independent, always all data */}
         {allMonths.length > 0 && (
-          <View style={{ height: scale(260) }}>
+          <View style={{ height: scale(250) }}>
             <Carousel
               style={{ width: screenWidth, height: scale(260) }}
               data={allMonths}
@@ -276,8 +278,9 @@ export default function HistoryScreen({ navigation }: Props) {
               }]}>
                 {(() => {
                   if (stats.avg === 0) return "--";
-                  const pct = Math.round(((selectedDay.duration ?? 0) / stats.avg - 1) * 100);
-                  return pct >= 0 ? `+${pct}%` : `${pct}%`;
+                  const diff = (selectedDay.duration ?? 0) - stats.avg;
+                  const sign = diff >= 0 ? "+" : "";
+                  return `${sign}${Math.round(diff)}s`;
                 })()}
               </Text>
               <Text style={styles.tooltipLabel}>vs moyenne</Text>
@@ -288,20 +291,32 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* Trend chart */}
         {chartData.length >= 2 && (
           <View style={styles.chartSection}>
-            <View style={styles.trendHeader}>
-              <View style={styles.rangeRow}>
-                {(["1M", "6M", "1Y", "ALL"] as Range[]).map((r) => (
-                  <TouchableOpacity
-                    key={r}
-                    style={[styles.rangeBtn, { paddingHorizontal: scale(12), paddingVertical: scale(5), borderRadius: scale(6) }, range === r && styles.rangeBtnActive]}
-                    onPress={() => setRange(r)}
-                  >
-                    <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>
-                      {{ "1M": "1 mois", "6M": "6 mois", "1Y": "1 an", ALL: "Tout" }[r]}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+            <View style={styles.statsRow}>
+              <View style={styles.stat}>
+                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{stats.count}</Text>
+                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>sessions</Text>
               </View>
+              <View style={styles.stat}>
+                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(Math.round(stats.avg))}</Text>
+                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>moyenne</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(stats.max)}</Text>
+                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>record</Text>
+              </View>
+            </View>
+            <View style={styles.rangeRow}>
+              {RANGES.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[styles.rangeBtn, { paddingHorizontal: scale(12), paddingVertical: scale(5), borderRadius: scale(6) }, range === r && styles.rangeBtnActive]}
+                  onPress={() => setRange(r)}
+                >
+                  <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>
+                    {RANGE_LABELS[r]}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
             <Svg width={chartWidth} height={chartHeight}>
               {/* Y-axis grid lines + labels (auto-scale) */}
@@ -355,21 +370,6 @@ export default function HistoryScreen({ navigation }: Props) {
         )}
 
         {/* List */}
-        {/* Stats row */}
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{stats.count}</Text>
-            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>sessions</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(Math.round(stats.avg))}</Text>
-            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>moyenne</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(stats.max)}</Text>
-            <Text style={[styles.statLabel, { fontSize: ms(10) }]}>record</Text>
-          </View>
-        </View>
 
         <View style={styles.sessionsCard}>
         {filtered.map((item, i) => (
@@ -408,8 +408,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   backLink: { color: "#aaa" },
-  trendHeader: { flexDirection: "row", alignItems: "center", marginTop: 16, marginBottom: 8 },
-  rangeRow: { flexDirection: "row", gap: 4, justifyContent: "center" },
+  rangeRow: { flexDirection: "row", gap: 4, justifyContent: "center", width: "100%", marginVertical: 8 },
   rangeBtn: {
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6,
     backgroundColor: "#1c1c22",
@@ -418,11 +417,9 @@ const styles = StyleSheet.create({
   rangeBtnActive: { backgroundColor: "#e2b714" },
   rangeText: { fontSize: 11, color: "#555", fontWeight: "600" },
   rangeTextActive: { color: "#16161a" },
-  content: { paddingHorizontal: 16, paddingBottom: 40 },
+  content: { paddingHorizontal: 16, paddingBottom: 16 },
   statsRow: {
-    flexDirection: "row", justifyContent: "space-around", marginVertical: 16,
-    backgroundColor: "#1c1c22", borderRadius: 16, paddingVertical: 16,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.3)", elevation: 4,
+    flexDirection: "row", justifyContent: "space-around", paddingTop: 10, paddingBottom: 4,
   },
   stat: { alignItems: "center" },
   statVal: { fontSize: 22, fontWeight: "500", color: "#fff", fontVariant: ["tabular-nums"] },
@@ -447,7 +444,7 @@ const styles = StyleSheet.create({
   tooltipLabel: { fontSize: ms(9), color: "#555", marginTop: 2 },
   // Chart
   chartSection: {
-    marginTop: 4, backgroundColor: "#1c1c22", borderRadius: 16, padding: 6,
+    backgroundColor: "#1c1c22", borderRadius: 16, padding: 6, marginBottom: 10,
     boxShadow: "0 2px 6px rgba(0,0,0,0.2)", elevation: 3,
   },
   // List rows
@@ -460,8 +457,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: "#222",
   },
   rowLast: { borderBottomWidth: 0 },
-  rowDate: { color: "#555", fontVariant: ["tabular-nums"], minWidth: scale(85) },
-  rowTime: { fontSize: 14, fontWeight: "500", color: "#ccc", width: 48, fontVariant: ["tabular-nums"] },
+  rowDate: { color: "#555", fontVariant: ["tabular-nums"] },
+  rowTime: { fontSize: 14, fontWeight: "500", color: "#ccc", fontVariant: ["tabular-nums"] },
   rowBar: { flex: 1, height: 3, backgroundColor: "#1a1a1a", borderRadius: 2, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 2 },
   // Clear
