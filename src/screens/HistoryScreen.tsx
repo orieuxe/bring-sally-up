@@ -115,7 +115,7 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const chartWidth = screenWidth - 40;
   const chartHeight = scale(CHART_HEIGHT);
-  const pad = { l: 24, r: 12, t: 4, b: 22 };
+  const pad = { l: scale(32), r: 12, t: 4, b: 22 };
 
   const scatterPoints = useMemo(() => {
     if (chartData.length < 2) return { points: [], trend: "", avgY: 0, maxY: 0, minY: 0, minX: 0, maxX: 0 };
@@ -327,7 +327,7 @@ export default function HistoryScreen({ navigation }: Props) {
                   return (
                     <React.Fragment key={`y-${val}`}>
                       <Line x1={pad.l} y1={y} x2={chartWidth - pad.r} y2={y} stroke="#2a2a2a" strokeWidth={0.5} />
-                      <SvgText x={pad.l - 4} y={y + 4} fill="#888" fontSize={ms(10, 0.8)} textAnchor="end">{formatTime(val)}</SvgText>
+                      <SvgText x={pad.l - 4} y={y + 4} fill="#888" fontSize={ms(8, 0.8)} textAnchor="end">{formatTime(val)}</SvgText>
                     </React.Fragment>
                   );
                 });
