@@ -1,0 +1,9 @@
+node_modules/
+package-lock.json
+assets/sally.mp3
+.expo/
+dist/
+*.apk
+*.aab
+android/
+ios/
