@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -36,6 +36,8 @@ export default function HistoryScreen({ navigation }: Props) {
   const [range, setRange] = useState<Range>("1M");
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<{ date: string; duration: number } | null>(null);
+  const carouselRef = useRef<any>(null);
+  const [carouselIdx, setCarouselIdx] = useState(-1);
   const [sortBy, setSortBy] = useState<"day" | "avg" | "done" | "miss" | null>(null);
   const [sortAsc, setSortAsc] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
@@ -66,9 +68,23 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const allMonths = useMemo(() => {
     const months = [];
-    for (let off = -11; off <= 0; off++) months.push(getMonthData(off));
+    const now = new Date();
+    let minOff = 0;
+    for (const a of history) {
+      const d = new Date(a.date);
+      const off = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
+      if (off < minOff) minOff = off;
+    }
+    for (let off = minOff; off <= 0; off++) {
+      const data = getMonthData(off);
+      if (data.cells.some(c => c.score > 0)) months.push(data);
+    }
     return months;
   }, [history]);
+
+  const carouselDefaultIdx = useMemo(() => {
+    return Math.max(0, allMonths.findIndex(m => m.offset === 0));
+  }, [allMonths]);
 
   useFocusEffect(
     useCallback(() => { getHistory().then(setHistory); }, [])
@@ -270,16 +286,17 @@ export default function HistoryScreen({ navigation }: Props) {
                 </Text>
               </View>
               <View style={styles.tooltipRow}>
+                <Text style={styles.tooltipLabel}>REPS</Text>
                 <Text style={styles.tooltipVal}>
                   {Math.round((selectedDay.duration ?? 0) / 3.4)}
                 </Text>
-                <Text style={styles.tooltipLabel}>reps</Text>
               </View>
               <View style={styles.tooltipRow}>
+                <Text style={styles.tooltipLabel}>TEMPS</Text>
                 <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
-                <Text style={styles.tooltipLabel}>temps</Text>
               </View>
               <View style={styles.tooltipRow}>
+                <Text style={styles.tooltipLabel}>MOYENNE</Text>
                 <Text style={[styles.tooltipVal, {
                   color: (selectedDay.duration ?? 0) >= stats.avg ? "#4caf50" : "#e25a5a",
                 }]}>
@@ -290,7 +307,6 @@ export default function HistoryScreen({ navigation }: Props) {
                     return `${sign}${Math.round(diff)}s`;
                   })()}
                 </Text>
-                <Text style={styles.tooltipLabel}>vs moyenne</Text>
               </View>
             </>
           ) : (
@@ -300,18 +316,27 @@ export default function HistoryScreen({ navigation }: Props) {
           )}
         </View>
 
-        {/* Calendar carousel — independent, always all data */}
+        {/* Calendar carousel — only months with data */}
         {allMonths.length > 0 && (
-          <View style={{ height: scale(250) }}>
+          <View style={{ height: scale(260), flexDirection: "row", alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => carouselRef.current?.prev()}
+              disabled={carouselIdx === 0}
+              style={{ opacity: carouselIdx === 0 ? 0.2 : 0.6 }}
+            >
+              <Text style={{ color: "#888", fontSize: ms(40) }}>‹</Text>
+            </TouchableOpacity>
             <Carousel
-              style={{ width: screenWidth, height: scale(260) }}
+              ref={carouselRef}
+              style={{ flex: 1, height: scale(260) }}
               data={allMonths}
-              defaultIndex={11}
+              defaultIndex={carouselDefaultIdx}
               itemSize={Math.min(screenWidth - 60, scale(340))}
               onSnapToItem={(idx: number) => {
-                setMonthOffset(idx - 11);
+                setMonthOffset(allMonths[idx].offset);
                 setRange("1M");
                 setSelectedDay(null);
+                setCarouselIdx(idx);
               }}
               renderItem={({ item: hm }: { item: ReturnType<typeof getMonthData> }) => (
                 <View style={styles.heatPage}>
@@ -339,6 +364,13 @@ export default function HistoryScreen({ navigation }: Props) {
                 </View>
               )}
             />
+            <TouchableOpacity
+              onPress={() => carouselRef.current?.next()}
+              disabled={carouselIdx === allMonths.length - 1 || carouselIdx === -1}
+              style={{ opacity: carouselIdx === allMonths.length - 1 || carouselIdx === -1 ? 0.1 : 0.6 }}
+            >
+              <Text style={{ color: "#888", fontSize: ms(40) }}>›</Text>
+            </TouchableOpacity>
           </View>
         )}
         {/* Trend chart */}
@@ -527,7 +559,7 @@ const styles = StyleSheet.create({
   tooltip: {
     backgroundColor: "#1c1c22", borderRadius: 12, padding: 14, marginBottom: 8,
     flexDirection: "row", justifyContent: "space-around", alignItems: "center",
-    minHeight: scale(60),
+    minHeight: scale(62),
   },
   tooltipDate: { fontSize: ms(11), color: "#888", marginBottom: 4, textAlign: "center" },
   tooltipRow: { alignItems: "center" },
