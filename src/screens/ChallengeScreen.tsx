@@ -7,7 +7,7 @@ import {
   Vibration,
   View,
 } from "react-native";
-import { Audio, AVPlaybackSource } from "expo-av";
+import { createAudioPlayer } from "expo-audio";
 import Svg, { Circle } from "react-native-svg";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from "../data/cues";
@@ -24,7 +24,7 @@ const TIMER_OFFSET = 6;
 const CUE_DELAY = -0.25;
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const audioSource: AVPlaybackSource = require("../../assets/sally.mp3");
+const audioSource = require("../../assets/sally.mp3");
 
 export default function ChallengeScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<Phase>("running");
@@ -35,11 +35,10 @@ export default function ChallengeScreen({ navigation }: Props) {
   const [adjustedTime, setAdjustedTime] = useState(0);
   const [saveMsg, setSaveMsg] = useState("");
   const [recordMsg, setRecordMsg] = useState("");
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const cueIndexRef = useRef(-1);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
   const cuesRef = useRef<Cue[]>(BUILTIN_CUES);
   const songDurationRef = useRef<number>(BUILTIN_DURATION);
 
@@ -56,19 +55,16 @@ export default function ChallengeScreen({ navigation }: Props) {
   useEffect(() => {
     beginChallenge();
     return () => {
-      if (soundRef.current) soundRef.current.unloadAsync();
+      if (playerRef.current) playerRef.current.remove();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  const playMusic = async () => {
+  const playMusic = () => {
     try {
-      const { sound: s } = await Audio.Sound.createAsync(audioSource, {
-        shouldPlay: true,
-        isLooping: false,
-      });
-      soundRef.current = s;
-      setSound(s);
+      const player = createAudioPlayer(audioSource);
+      playerRef.current = player;
+      player.play();
     } catch {
       // No audio
     }
@@ -98,7 +94,7 @@ export default function ChallengeScreen({ navigation }: Props) {
       if (elapsedSec >= songDurationRef.current) {
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = null;
-        if (soundRef.current) soundRef.current.stopAsync();
+        if (playerRef.current) playerRef.current.pause();
         finishChallenge();
       }
     }, 100);
@@ -133,7 +129,7 @@ export default function ChallengeScreen({ navigation }: Props) {
   const giveUp = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
-    if (soundRef.current) soundRef.current.stopAsync();
+    if (playerRef.current) playerRef.current.pause();
     setFailed(true);
     finishChallenge();
   };
