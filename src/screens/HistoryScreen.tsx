@@ -15,13 +15,12 @@ import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getHistory, clearHistory } from "../storage";
 import type { Attempt, RootStackParamList } from "../types";
+import { scoreColor } from "../utils/color";
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, "History"> };
 const RANGES = ["1M", "6M", "1Y", "ALL"] as const;
 type Range = (typeof RANGES)[number];
 const RANGE_LABELS: Record<Range, string> = { "1M": "1 mois", "6M": "6 mois", "1Y": "1 an", ALL: "Tout" };
-
-const COLORS = ["#1a1a1a", "#3d2020", "#6b3812", "#3d5c20", "#2d8f2d"];
 
 function formatTime(s: number) {
   const m = Math.floor(s / 60);
@@ -199,34 +198,7 @@ export default function HistoryScreen({ navigation }: Props) {
     return { linePath, maxY: yScale, minY: yBase, minX, maxX, avgY: stats.avg };
   }, [chartData, stats]);
 
-  const getHeatColor = (score: number) => {
-    if (score === 0) return COLORS[0];
-    const ratio = stats.avg > 0 ? Math.min(score / stats.avg, 1.5) : 0;
-
-    // Interpolate across 4 color stops (ratio 0→1.5+)
-    const stops = [
-      { r: 0.20, color: [0x54, 0x2e, 0x2e] },  // red   @ ratio 0.2
-      { r: 0.50, color: [0x7a, 0x4a, 0x1e] },  // orange @ ratio 0.5
-      { r: 0.85, color: [0x4a, 0x6e, 0x2a] },  // olive  @ ratio 0.85
-      { r: 1.20, color: [0x38, 0xa6, 0x36] },  // green  @ ratio 1.2
-    ];
-
-    // Find surrounding stops
-    let lo = stops[0], hi = stops[stops.length - 1];
-    for (let i = 0; i < stops.length - 1; i++) {
-      if (ratio >= stops[i].r && ratio <= stops[i + 1].r) {
-        lo = stops[i]; hi = stops[i + 1]; break;
-      }
-    }
-    if (ratio <= stops[0].r) { lo = stops[0]; hi = stops[0]; }
-    if (ratio >= stops[stops.length - 1].r) { lo = stops[stops.length - 1]; hi = stops[stops.length - 1]; }
-
-    const t = hi.r !== lo.r ? (ratio - lo.r) / (hi.r - lo.r) : 0;
-    const r = Math.round(lo.color[0] + (hi.color[0] - lo.color[0]) * t);
-    const g = Math.round(lo.color[1] + (hi.color[1] - lo.color[1]) * t);
-    const b = Math.round(lo.color[2] + (hi.color[2] - lo.color[2]) * t);
-    return `rgb(${r},${g},${b})`;
-  };
+  const getHeatColor = (score: number) => scoreColor(score, stats.avg);
 
   const handleClear = () => {
     const doClear = async () => { await clearHistory(); setHistory([]); };

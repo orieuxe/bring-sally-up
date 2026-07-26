@@ -11,6 +11,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getHistory } from "../storage";
 import type { RootStackParamList, Attempt } from "../types";
+import { scoreColor } from "../utils/color";
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, "Home"> };
 
@@ -18,6 +19,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [lastScore, setLastScore] = useState<Attempt | null>(null);
   const [bestScore, setBestScore] = useState<Attempt | null>(null);
   const [streak, setStreak] = useState(0);
+  const [recentAvg, setRecentAvg] = useState(0);
 
   useFocusEffect(useCallback(() => {
     getHistory().then((h) => {
@@ -32,6 +34,8 @@ export default function HomeScreen({ navigation }: Props) {
           if (d.toDateString() === e.toDateString()) s++; else break;
         }
         setStreak(s);
+        const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
+        if (recent.length > 0) setRecentAvg(recent.reduce((a, b) => a + b, 0) / recent.length);
       }
     });
   }, []));
@@ -51,16 +55,16 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={[styles.scoreValue, { fontSize: ms(42) }]}>
               {bestScore?.duration != null ? fmt(bestScore.duration) : "--:--"}
             </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>{bestScore?.date ?? ""}</Text>
+            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>{bestScore?.date ? new Date(bestScore.date).toLocaleDateString("fr", { day: "numeric", month: "short", year: "numeric" }) : ""}</Text>
           </View>
           <View style={[styles.scoreBox, {
             paddingHorizontal: scale(24), paddingVertical: scale(16), borderRadius: scale(16),
           }]}>
             <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>dernier</Text>
-            <Text style={[styles.scoreValue, { fontSize: ms(42) }]}>
+            <Text style={[styles.scoreValue, { fontSize: ms(42), color: lastScore?.duration != null ? scoreColor(lastScore.duration, recentAvg) : "#fff" }]}>
               {lastScore?.duration != null ? fmt(lastScore.duration) : "--:--"}
             </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>{lastScore?.date ?? ""}</Text>
+            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>{lastScore?.date ? new Date(lastScore.date).toLocaleDateString("fr", { day: "numeric", month: "short", year: "numeric" }) : ""}</Text>
           </View>
         </View>
 
