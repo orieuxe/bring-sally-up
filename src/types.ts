@@ -1,6 +1,6 @@
 export interface Cue {
   time: number;
-  position: "up" | "down";
+  position: 'up' | 'down';
 }
 
 export interface Attempt {
