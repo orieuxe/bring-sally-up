@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Carousel } from "react-native-reanimated-carousel";
 import { moderateScale as ms, scale } from "react-native-size-matters";
-import Svg, { Circle, Line, Polyline, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, G, Line, Polyline, Rect, Text as SvgText } from "react-native-svg";
 import { useFocusEffect } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import { getHistory, clearHistory } from "../storage";
@@ -36,6 +36,8 @@ export default function HistoryScreen({ navigation }: Props) {
   const [range, setRange] = useState<Range>("1M");
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedDay, setSelectedDay] = useState<{ date: string; duration: number } | null>(null);
+  const [sortBy, setSortBy] = useState<"day" | "avg" | "done" | "miss" | null>(null);
+  const [sortAsc, setSortAsc] = useState(false);
   const { width: screenWidth } = useWindowDimensions();
 
   // Heatmap generator
@@ -100,6 +102,40 @@ export default function HistoryScreen({ navigation }: Props) {
     const sum = times.reduce((a, b) => a + b, 0);
     return { avg: sum / times.length, max: Math.max(...times), count: times.length };
   }, [filtered]);
+
+  const weekdayStats = useMemo(() => {
+    const DAYS = ["lun", "mar", "mer", "jeu", "ven", "sam", "dim"];
+    if (filtered.length === 0) return DAYS.map((day) => ({ day, avg: 0, done: 0, miss: 0 }));
+    const dates = filtered.map((a) => a.date);
+    const minDate = new Date(Math.min(...dates.map((d) => new Date(d).getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d) => new Date(d).getTime())));
+    // Count total occurrences of each weekday in range
+    const total = Array(7).fill(0);
+    const cur = new Date(minDate);
+    while (cur <= maxDate) {
+      total[(cur.getDay() + 6) % 7]++;
+      cur.setDate(cur.getDate() + 1);
+    }
+    // Count sessions per weekday
+    const sum = Array(7).fill(0);
+    const done = Array(7).fill(0);
+    for (const a of filtered) {
+      const day = (new Date(a.date).getDay() + 6) % 7;
+      sum[day] += a.duration ?? 0;
+      done[day]++;
+    }
+    const rows = DAYS.map((day, i) => ({
+      day, idx: i, avg: sum[i] / Math.max(done[i], 1), done: done[i], miss: total[i] - done[i],
+    }));
+    if (sortBy) {
+      const dir = sortAsc ? 1 : -1;
+      rows.sort((a, b) => {
+        const val = sortBy === "day" ? a.idx - b.idx : (a[sortBy] as number) - (b[sortBy] as number);
+        return val * dir;
+      });
+    }
+    return rows;
+  }, [filtered, sortBy, sortAsc]);
 
   // Scatter + trend data
   const chartData = useMemo(() => {
@@ -189,6 +225,20 @@ export default function HistoryScreen({ navigation }: Props) {
     }
   };
 
+  const exportCSV = () => {
+    const rows = [["date", "duree", "completed"].join(",")];
+    for (const a of history) {
+      rows.push([a.date, a.duration ?? 0, a.completed ? "1" : "0"].join(","));
+    }
+    if (Platform.OS === "web") {
+      const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "bring-sally-up.csv"; a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   if (history.length === 0) {
     return (
       <View style={styles.empty}>
@@ -207,6 +257,49 @@ export default function HistoryScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Day tooltip — always visible at top */}
+        <View style={styles.tooltip}>
+          {selectedDay ? (
+            <>
+              <View style={{ alignItems: "center" }}>
+                <Text style={{ color: "#888", fontSize: ms(11), textTransform: "capitalize" }}>
+                  {new Date(selectedDay.date).toLocaleDateString("fr", { weekday: "short" }).replace(".", "")}
+                </Text>
+                <Text style={{ color: "#888", fontSize: ms(18), fontWeight: "500" }}>
+                  {new Date(selectedDay.date).getDate()}
+                </Text>
+              </View>
+              <View style={styles.tooltipRow}>
+                <Text style={styles.tooltipVal}>
+                  {Math.round((selectedDay.duration ?? 0) / 3.4)}
+                </Text>
+                <Text style={styles.tooltipLabel}>reps</Text>
+              </View>
+              <View style={styles.tooltipRow}>
+                <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
+                <Text style={styles.tooltipLabel}>temps</Text>
+              </View>
+              <View style={styles.tooltipRow}>
+                <Text style={[styles.tooltipVal, {
+                  color: (selectedDay.duration ?? 0) >= stats.avg ? "#4caf50" : "#e25a5a",
+                }]}>
+                  {(() => {
+                    if (stats.avg === 0) return "--";
+                    const diff = (selectedDay.duration ?? 0) - stats.avg;
+                    const sign = diff >= 0 ? "+" : "";
+                    return `${sign}${Math.round(diff)}s`;
+                  })()}
+                </Text>
+                <Text style={styles.tooltipLabel}>vs moyenne</Text>
+              </View>
+            </>
+          ) : (
+            <Text style={{ color: "#555", fontSize: ms(12), textAlign: "center", width: "100%" }}>
+              cliquer sur un jour pour le voir en détails
+            </Text>
+          )}
+        </View>
+
         {/* Calendar carousel — independent, always all data */}
         {allMonths.length > 0 && (
           <View style={{ height: scale(250) }}>
@@ -248,43 +341,6 @@ export default function HistoryScreen({ navigation }: Props) {
             />
           </View>
         )}
-        {/* Day tooltip */}
-        {selectedDay && (
-          <View style={styles.tooltip}>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ color: "#888", fontSize: ms(11), textTransform: "capitalize" }}>
-                {new Date(selectedDay.date).toLocaleDateString("fr", { weekday: "short" }).replace(".", "")}
-              </Text>
-              <Text style={{ color: "#888", fontSize: ms(18), fontWeight: "500" }}>
-                {new Date(selectedDay.date).getDate()}
-              </Text>
-            </View>
-            <View style={styles.tooltipRow}>
-              <Text style={styles.tooltipVal}>
-                {(() => Math.round((selectedDay.duration ?? 0) / 3.4))()}
-              </Text>
-              <Text style={styles.tooltipLabel}>reps</Text>
-            </View>
-            <View style={styles.tooltipRow}>
-              <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
-              <Text style={styles.tooltipLabel}>temps</Text>
-            </View>
-            <View style={styles.tooltipRow}>
-              <Text style={[styles.tooltipVal, {
-                color: (selectedDay.duration ?? 0) >= stats.avg ? "#4caf50" : "#e25a5a",
-              }]}>
-                {(() => {
-                  if (stats.avg === 0) return "--";
-                  const diff = (selectedDay.duration ?? 0) - stats.avg;
-                  const sign = diff >= 0 ? "+" : "";
-                  return `${sign}${Math.round(diff)}s`;
-                })()}
-              </Text>
-              <Text style={styles.tooltipLabel}>vs moyenne</Text>
-            </View>
-          </View>
-        )}
-
         {/* Trend chart */}
         {chartData.length >= 2 && (
           <View style={styles.chartSection}>
@@ -360,7 +416,10 @@ export default function HistoryScreen({ navigation }: Props) {
                 const x = pad.l + ((d.ts - scatterPoints.minX) / (scatterPoints.maxX - scatterPoints.minX || 1)) * (chartWidth - pad.l - pad.r);
                 const y = pad.t + (1 - (d.time - scatterPoints.minY) / ((scatterPoints.maxY - scatterPoints.minY) || 1)) * (chartHeight - pad.t - pad.b);
                 return (
-                  <Circle key={i} cx={x} cy={y} r={3} fill={getHeatColor(d.time)} opacity={0.8} />
+                  <G key={i} onPress={() => setSelectedDay({ date: d.date, duration: d.time })}>
+                    <Rect x={x - 10} y={y - 10} width={20} height={20} fill="transparent" />
+                    <Circle cx={x} cy={y} r={3} fill={getHeatColor(d.time)} opacity={0.8} />
+                  </G>
                 );
               })}
               {/* Highlight selected day */}
@@ -377,31 +436,57 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* List */}
 
         <View style={styles.sessionsCard}>
-        {filtered.map((item, i) => (
-          <View key={i} style={[styles.row, i === filtered.length - 1 && styles.rowLast]}>
-            <Text style={[styles.rowDate, { fontSize: ms(12) }]}>
-              {new Date(item.date).toLocaleDateString("fr", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+          <Text style={[styles.sectionTitle, { fontSize: ms(10), marginLeft: 14, marginTop: 10, marginBottom: 6 }]}>par jour de la semaine</Text>
+          <View style={styles.thRow}>
+            <Text style={[styles.th, { fontSize: ms(10) }]} onPress={() => { setSortBy("day"); setSortAsc(sortBy === "day" ? !sortAsc : false); }}>
+              jour {sortBy === "day" ? (sortAsc ? "▲" : "▼") : ""}
             </Text>
-            <Text style={[styles.rowTime, { fontSize: ms(14) }]}>{formatTime(item.duration ?? 0)}</Text>
-            <View style={styles.rowBar}>
-              <View style={[styles.barFill, { width: `${Math.min(100, ((item.duration ?? 0) / (stats.max || 1)) * 100)}%`, backgroundColor: item.completed ? "#e2b714" : "#444" }]} />
-            </View>
+            <Text style={[styles.th, { fontSize: ms(10) }]} onPress={() => { setSortBy("done"); setSortAsc(sortBy === "done" ? !sortAsc : false); }}>
+              fait {sortBy === "done" ? (sortAsc ? "▲" : "▼") : ""}
+            </Text>
+            <Text style={[styles.th, { fontSize: ms(10) }]} onPress={() => { setSortBy("miss"); setSortAsc(sortBy === "miss" ? !sortAsc : false); }}>
+              raté {sortBy === "miss" ? (sortAsc ? "▲" : "▼") : ""}
+            </Text>
+            <Text style={[styles.th, { fontSize: ms(10) }]} onPress={() => { setSortBy("avg"); setSortAsc(sortBy === "avg" ? !sortAsc : false); }}>
+              moyenne {sortBy === "avg" ? (sortAsc ? "▲" : "▼") : ""}
+            </Text>
           </View>
-        ))}
+          {(() => {
+            const bestDone = Math.max(...weekdayStats.map(d => d.done));
+            const worstDone = Math.min(...weekdayStats.map(d => d.done));
+            const bestAvg = Math.max(...weekdayStats.map(d => d.avg));
+            const worstAvg = Math.min(...weekdayStats.map(d => d.done > 0 ? d.avg : Infinity));
+            return weekdayStats.map((d, i) => (
+              <View key={d.day} style={[styles.row, i === weekdayStats.length - 1 && styles.rowLast]}>
+                <Text style={[styles.cell, { fontSize: ms(12), fontWeight: "600", color: "#888" }]}>{d.day}</Text>
+                <Text style={[styles.cellNum, { fontSize: ms(13), color: d.done === bestDone && bestDone > 0 ? "#4caf50" : d.done === worstDone ? "#e25a5a" : "#ccc" }]}>{d.done}</Text>
+                <Text style={[styles.cellNum, { fontSize: ms(13) }]}>{d.miss}</Text>
+                <Text style={[styles.cellNum, { fontSize: ms(13), color: d.done > 0 && d.avg === bestAvg ? "#4caf50" : d.done > 0 && d.avg === worstAvg ? "#e25a5a" : "#ccc" }]}>
+                  {formatTime(Math.round(d.avg))}
+                </Text>
+              </View>
+            ));
+          })()}
         </View>
 
         <View style={styles.bottomRow}>
           <TouchableOpacity
-            style={[styles.clearBtn, { paddingHorizontal: scale(24), paddingVertical: scale(12), borderRadius: scale(24) }]}
+            style={[styles.clearBtn, { paddingHorizontal: scale(20), paddingVertical: scale(10), borderRadius: scale(20) }]}
             onPress={handleClear}
           >
-            <Text style={[styles.clearBtnText, { fontSize: ms(13) }]}>effacer</Text>
+            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>effacer</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.clearBtn, { paddingHorizontal: scale(24), paddingVertical: scale(12), borderRadius: scale(24) }]}
+            style={[styles.clearBtn, { paddingHorizontal: scale(20), paddingVertical: scale(10), borderRadius: scale(20) }]}
             onPress={() => navigation.navigate("Import")}
           >
-            <Text style={[styles.clearBtnText, { fontSize: ms(13) }]}>importer</Text>
+            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>importer</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.clearBtn, { paddingHorizontal: scale(20), paddingVertical: scale(10), borderRadius: scale(20) }]}
+            onPress={exportCSV}
+          >
+            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>exporter</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -441,7 +526,8 @@ const styles = StyleSheet.create({
   legend: { flexDirection: "row", justifyContent: "flex-start", alignItems: "center", gap: 4, marginBottom: 8 },
   tooltip: {
     backgroundColor: "#1c1c22", borderRadius: 12, padding: 14, marginBottom: 8,
-    flexDirection: "row", justifyContent: "space-around",
+    flexDirection: "row", justifyContent: "space-around", alignItems: "center",
+    minHeight: scale(60),
   },
   tooltipDate: { fontSize: ms(11), color: "#888", marginBottom: 4, textAlign: "center" },
   tooltipRow: { alignItems: "center" },
@@ -464,8 +550,11 @@ const styles = StyleSheet.create({
   rowLast: { borderBottomWidth: 0 },
   rowDate: { color: "#555", fontVariant: ["tabular-nums"] },
   rowTime: { fontSize: 14, fontWeight: "500", color: "#ccc", fontVariant: ["tabular-nums"] },
-  rowBar: { flex: 1, height: 3, backgroundColor: "#1a1a1a", borderRadius: 2, overflow: "hidden" },
-  barFill: { height: "100%", borderRadius: 2 },
+  thRow: { flexDirection: "row", paddingHorizontal: 14, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "#222" },
+  th: { flex: 1, textAlign: "center", color: "#555", fontWeight: "600", textTransform: "uppercase" },
+  cell: { flex: 1, textAlign: "center" },
+  cellNum: { flex: 1, textAlign: "center", color: "#ccc", fontVariant: ["tabular-nums"] },
+  sectionTitle: { color: "#888", textTransform: "uppercase", letterSpacing: 1, fontWeight: "600" },
   // Clear
   bottomRow: { flexDirection: "row", justifyContent: "center", gap: 16, marginTop: 16 },
   clearBtn: {
