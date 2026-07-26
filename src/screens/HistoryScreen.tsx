@@ -353,7 +353,10 @@ export default function HistoryScreen({ navigation }: Props) {
                     {hm.cells.map((c: { day: number; score: number; label: string }) => (
                       <TouchableOpacity
                         key={c.label}
-                        style={[styles.heatCell, { backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4) }]}
+                        style={[styles.heatCell, {
+                          backgroundColor: getHeatColor(c.score), width: scale(36), height: scale(36), borderRadius: scale(4),
+                          ...(selectedDay?.date === c.label && c.score > 0 ? { borderWidth: 2, borderColor: "#e2b714" } : {}),
+                        }]}
                         onPress={() => c.score > 0 ? setSelectedDay({ date: c.label, duration: c.score }) : setSelectedDay(null)}
                         activeOpacity={c.score > 0 ? 0.7 : 1}
                       >
