@@ -248,9 +248,14 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* Day tooltip */}
         {selectedDay && (
           <View style={styles.tooltip}>
-            <Text style={styles.tooltipDate}>
-              {new Date(selectedDay.date).toLocaleDateString("fr", { weekday: "short", day: "numeric", month: "long" })}
-            </Text>
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ color: "#888", fontSize: ms(11), textTransform: "capitalize" }}>
+                {new Date(selectedDay.date).toLocaleDateString("fr", { weekday: "short" }).replace(".", "")}
+              </Text>
+              <Text style={{ color: "#888", fontSize: ms(18), fontWeight: "500" }}>
+                {new Date(selectedDay.date).getDate()}
+              </Text>
+            </View>
             <View style={styles.tooltipRow}>
               <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
               <Text style={styles.tooltipLabel}>temps</Text>
@@ -402,7 +407,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#16161a" },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
   backLink: { color: "#aaa" },
-  trendHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 16, marginBottom: 8 },
+  trendHeader: { flexDirection: "row", alignItems: "center", marginTop: 16, marginBottom: 8 },
   rangeRow: { flexDirection: "row", gap: 4, justifyContent: "center" },
   rangeBtn: {
     paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6,
