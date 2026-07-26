@@ -214,9 +214,7 @@ export default function HistoryScreen({ navigation }: Props) {
               style={{ width: screenWidth, height: scale(260) }}
               data={allMonths}
               defaultIndex={11}
-              width={screenWidth * 0.78}
-              mode="parallax"
-              modeConfig={{ parallaxScrollingOffset: screenWidth * 0.25, parallaxScrollingScale: 0.92 }}
+              itemSize={Math.min(screenWidth - 60, scale(340))}
               onSnapToItem={(idx: number) => {
                 setMonthOffset(idx - 11);
                 setRange("1M");
