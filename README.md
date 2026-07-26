@@ -1,24 +1,24 @@
 # Bring Sally Up
 
-App de challenge push-up basée sur "Flower" de Moby. Chronomètre synchronisé avec les cues vocaux "Bring Sally up / down", suivi de progression, historique avec heatmap et graphiques.
+Push-up challenge app synced to "Flower" by Moby. Timer follows vocal cues "Bring Sally up / down", tracks progress with heatmap and charts.
 
 ## Stack
 
 - **Expo SDK 57** (React Native 0.86)
 - **TypeScript** (strict)
 - **React Navigation** (stack)
-- **react-native-reanimated** + **react-native-reanimated-carousel** (carousel calendrier)
-- **react-native-svg** (graphiques, cercle de progression)
-- **react-native-size-matters** (UI responsive)
-- **expo-av** (lecture audio)
-- **AsyncStorage** (persistance locale)
+- **react-native-reanimated** + **react-native-reanimated-carousel** (calendar carousel)
+- **react-native-svg** (charts, progress ring)
+- **react-native-size-matters** (responsive UI)
+- **expo-audio** (playback)
+- **AsyncStorage** (local persistence)
 
-## Lancer le projet
+## Run
 
 ```bash
 npm install
 npx expo start --web    # web (dev)
-npx expo start          # mobile (scanner Expo Go)
+npx expo start          # mobile (scan Expo Go)
 ```
 
 ## Build APK
@@ -27,42 +27,44 @@ npx expo start          # mobile (scanner Expo Go)
 npx eas build -p android --profile preview
 ```
 
-L'APK nécessite le fichier `assets/sally.mp3` (non inclus, à fournir).
+Requires `assets/sally.mp3` (not included).
 
 ## Structure
 
 ```
 src/
-├── data/cues.ts           # Timestamps calibrés (61 cues)
+├── data/cues.ts           # Calibrated timestamps (61 cues)
 ├── screens/
-│   ├── HomeScreen.tsx      # Accueil : scores, streak, bouton GO
-│   ├── ChallengeScreen.tsx # Player : cercle progression, badges UP/DOWN, ajustement temps
-│   ├── HistoryScreen.tsx   # Calendrier swipe, graphique tendance, stats, sessions
-│   ├── ImportScreen.tsx    # Import historique en M:SS
-│   └── CalibrateScreen.tsx # Calibration cues (one-shot)
-├── storage.ts             # CRUD AsyncStorage (historique, cues custom)
-└── types.ts               # Types partagés
+│   ├── HomeScreen.tsx      # Home: scores, streak, GO button
+│   ├── ChallengeScreen.tsx # Player: progress ring, UP/DOWN badges, time adjust
+│   ├── HistoryScreen.tsx   # Calendar carousel, trend chart, weekday stats, sessions
+│   ├── ImportScreen.tsx    # Bulk import in M:SS format
+│   └── CalibrateScreen.tsx # Tap-to-calibrate cues (one-shot)
+├── storage.ts             # AsyncStorage CRUD (history, custom cues)
+└── types.ts               # Shared types
 ```
 
-## Fonctionnalités
+## Features
 
-- **Player** : cercle SVG progressif (vert → rouge), badges UP/DOWN, tap n'importe où pour abandonner, ajustement du temps ± avant sauvegarde. Une seule entrée par jour (écrase si meilleur temps).
-- **Calendrier** : carousel swipe des 12 derniers mois, cellules colorées (rouge à vert selon performance vs moyenne).
-- **Tooltip** : tap une cellule pour voir le temps, reps estimés, ±% vs moyenne.
-- **Graphique tendance** : courbe mobile average, nuage de points, axe Y auto-scalé, axe X première/dernière date.
-- **Filtres** : 1M / 6M / 1Y / ALL. Le swipe d'un mois force 1M sur ce mois.
-- **Historique** : liste des sessions dans une carte, dates format FR.
-- **Import** : format `YYYY-MM-DD M:SS`.
-- **Calibration** : tape au rythme de la chanson pour enregistrer les vrais timestamps (stockés en dur depuis).
+- **Player**: SVG progress ring (green→red), UP/DOWN badges, tap anywhere to give up, ± time adjust before save. One entry per day (overwrites if better).
+- **Calendar**: swipeable carousel, cells colored (red→green vs period average).
+- **Tooltip**: tap a cell to see time, estimated reps, ±s vs average.
+- **Trend chart**: moving average curve, scatter dots, auto-scaled Y axis.
+- **Filters**: 1M / 6M / 1Y / ALL. Swiping a month forces 1M on that month.
+- **Weekday stats**: sortable table (avg time / sessions done / missed days).
+- **Import**: paste `YYYY-MM-DD M:SS` lines.
+- **Calibration**: tap along with the song to record real timestamps (stored as custom cues).
+- **Export**: CSV download (date, duration, completed).
+- **Score color**: shared `scoreColor(score, avg)` gradient — red → orange → yellow → pale green → green.
 
-## Dernières actions (juillet 2026)
+## Recent (July 2026)
 
-- **UI responsive** : `react-native-size-matters` (`ms()` / `scale()`) pour adapter tailles à l'écran (mobile, tablette).
-- **Tooltip calendrier** : remplace la légende, affiche temps + reps + écart à la moyenne au tap.
-- **Dates FR** : format `jj/mm/aa` dans l'historique.
-- **Carousel calendrier** : `react-native-reanimated-carousel` v5, swipe fluide, aperçu des mois adjacents.
-- **Graphique tendance** : auto-scale Y (min all-time → max période), grille, labels lisibles.
-- **Une entrée par jour** : sauvegarde intelligente, rejet si moins bon que le jour même.
-- **Player** : cercle de progression SVG (vert→jaune→orange→rouge), badges UP/DOWN largeur fixe, pas de saut de layout.
-- **TypeScript** : migration complète, types partagés, navigation typée.
-- **ESLint** : config `@stylistic`, format auto avant commit.
+- **Responsive UI**: `react-native-size-matters` (`ms()` / `scale()`) for all screens.
+- **Calendar carousel**: `react-native-reanimated-carousel`, skips empty months, left/right arrows + swipe.
+- **Heatmap**: per-cell color based on score vs 10-session average.
+- **Weekday table**: replaces raw session list, sortable columns.
+- **Tooltip at top**: always visible placeholder or selected-day details.
+- **Trend chart**: auto-scale, overflow-visible labels, clickable scatter points.
+- **Score color ring**: live ring color based on average of last 10 sessions.
+- **ACENT constant**: single source of truth for all button/highlight colors.
+- **ESLint**: `@stylistic` rules with auto-fix (`npm run format`).
