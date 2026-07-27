@@ -20,8 +20,9 @@ const STOPS = PALETTE.map((h, i) => ({
 }));
 
 export function scoreColor(score: number, avg: number): string {
-  if (score === 0 || avg <= 0) return '#1a1a1a';
-  const ratio = Math.min(score / avg, 1.5);
+  if (score === 0) return '#1a1a1a';
+  // No average yet (first ever session): median green instead of dull grey
+  const ratio = avg > 0 ? Math.min(score / avg, 1.5) : 1;
 
   let lo = STOPS[0], hi = STOPS[STOPS.length - 1];
   for (let i = 0; i < STOPS.length - 1; i++) {
