@@ -55,7 +55,7 @@ src/
 - **Import**: paste `YYYY-MM-DD M:SS` lines.
 - **Calibration**: tap along with the song to record real timestamps (stored as custom cues).
 - **Export**: CSV download (date, duration, completed).
-- **Score color**: shared `scoreColor(score, avg)` gradient — red → orange → yellow → pale green → green.
+- **Score color**: shared `scoreColor(score, avg)` gradient — dark red → brick → dull sage (average) → green → deep pine (record). White text stays readable on every step; all-time best day gets an accent ★ in the calendar, selected day a white border.
 
 ## Recent (July 2026)
 

@@ -263,6 +263,10 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const getHeatColor = (score: number) => scoreColor(score, stats.avg);
 
+  const allTimeBest = useMemo(() => {
+    return Math.max(0, ...history.map(a => a.duration ?? 0));
+  }, [history]);
+
   const handleClear = () => {
     const doClear = async () => {
       await clearHistory();
@@ -453,8 +457,8 @@ export default function HistoryScreen({ navigation }: Props) {
                           borderRadius: scale(4),
                           ...(selectedDay?.date === c.label && c.score > 0
                             ? {
-                                borderWidth: 2,
-                                borderColor: ACCENT,
+                                borderWidth: 3,
+                                borderColor: '#fff',
                               }
                             : {}),
                         }]}
@@ -466,6 +470,9 @@ export default function HistoryScreen({ navigation }: Props) {
                           : setSelectedDay(null)}
                         activeOpacity={c.score > 0 ? 0.7 : 1}
                       >
+                        {c.score > 0 && c.score === allTimeBest && (
+                          <Text style={[styles.recordStar, { fontSize: ms(9) }]}>★</Text>
+                        )}
                         <Text style={[styles.heatCellText, c.score > 0 && styles.heatCellTextActive, { fontSize: ms(10) }]}>{c.day}</Text>
                       </TouchableOpacity>
                     ))}
@@ -786,6 +793,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   heatCellText: { color: '#333' },
+  recordStar: {
+    position: 'absolute',
+    top: scale(2),
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    color: ACCENT,
+    fontWeight: '700',
+  },
   heatCellTextActive: {
     color: '#fff',
     fontWeight: '600',

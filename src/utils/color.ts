@@ -10,9 +10,9 @@ export const ACCENT_RGB = `${_accentRgb[0]},${_accentRgb[1]},${_accentRgb[2]}`;
 const PALETTE = [
   '#413333',
   '#8f3a31',
-  '#789b72',
-  '#3eb916',
-  '#ffeb07',
+  '#6b7a67',
+  '#36a54c',
+  '#0e7355',
 ];
 const STOPS = PALETTE.map((h, i) => ({
   r: 0.20 + (i / (PALETTE.length - 1)) * 1.30,
