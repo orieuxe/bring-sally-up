@@ -115,15 +115,25 @@ export default function TrendChart({
             <Rect x={x(d.ts) - 10} y={y(d.time) - 10} width={20} height={20} fill="transparent" />
             {d.time === allTimeBest
               ? (
-                  <SvgText x={x(d.ts)} y={y(d.time) + 4} fill={RECORD_GOLD} fontSize={ms(11)} fontWeight="bold" textAnchor="middle">★</SvgText>
+                  // Selected record: the star itself turns white (no ring)
+                  <SvgText
+                    x={x(d.ts)}
+                    y={y(d.time) + 4}
+                    fill={selectedDate === d.date ? COLORS.text : RECORD_GOLD}
+                    fontSize={ms(11)}
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    ★
+                  </SvgText>
                 )
               : (
                   <Circle cx={x(d.ts)} cy={y(d.time)} r={3} fill={getColor(d.time)} opacity={0.8} />
                 )}
           </G>
         ))}
-        {selectedPt && (
-          <Circle cx={x(selectedPt.ts)} cy={y(selectedPt.time)} r={4} fill="none" stroke={ACCENT} strokeWidth={2} />
+        {selectedPt && selectedPt.time !== allTimeBest && (
+          <Circle cx={x(selectedPt.ts)} cy={y(selectedPt.time)} r={4} fill="none" stroke={COLORS.text} strokeWidth={2} />
         )}
       </Svg>
     </View>

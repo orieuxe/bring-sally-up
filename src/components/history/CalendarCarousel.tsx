@@ -87,7 +87,14 @@ export default function CalendarCarousel({
                   activeOpacity={c.score > 0 ? 0.7 : 1}
                 >
                   {c.score > 0 && c.score === allTimeBest && (
-                    <Text style={[styles.star, { fontSize: ms(11) }]}>★</Text>
+                    <Text style={[
+                      styles.star,
+                      { fontSize: ms(11) },
+                      selectedDate === c.label && { color: COLORS.text },
+                    ]}
+                    >
+                      ★
+                    </Text>
                   )}
                   <Text style={[styles.cellText, c.score > 0 && styles.cellTextActive, { fontSize: ms(10) }]}>
                     {c.day}
