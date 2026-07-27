@@ -471,7 +471,7 @@ export default function HistoryScreen({ navigation }: Props) {
                         activeOpacity={c.score > 0 ? 0.7 : 1}
                       >
                         {c.score > 0 && c.score === allTimeBest && (
-                          <Text style={[styles.recordStar, { fontSize: ms(9) }]}>★</Text>
+                          <Text style={[styles.recordStar, { fontSize: ms(11) }]}>★</Text>
                         )}
                         <Text style={[styles.heatCellText, c.score > 0 && styles.heatCellTextActive, { fontSize: ms(10) }]}>{c.day}</Text>
                       </TouchableOpacity>
@@ -795,12 +795,14 @@ const styles = StyleSheet.create({
   heatCellText: { color: '#333' },
   recordStar: {
     position: 'absolute',
-    top: scale(2),
+    top: scale(1),
     left: 0,
     right: 0,
     textAlign: 'center',
-    color: ACCENT,
+    color: '#e89b2e',
     fontWeight: '700',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowRadius: 2,
   },
   heatCellTextActive: {
     color: '#fff',
