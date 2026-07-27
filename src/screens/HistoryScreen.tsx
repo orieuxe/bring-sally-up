@@ -28,6 +28,7 @@ import type { DayRef } from '../components/history/DayTooltip';
 import CalendarCarousel from '../components/history/CalendarCarousel';
 import TrendChart from '../components/history/TrendChart';
 import WeekdayTable from '../components/history/WeekdayTable';
+import TimeSlotTable from '../components/history/TimeSlotTable';
 import FilterBar from '../components/history/FilterBar';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'History'> };
@@ -223,6 +224,7 @@ export default function HistoryScreen({ navigation }: Props) {
         />
 
         <WeekdayTable attempts={filtered} />
+        <TimeSlotTable attempts={filtered} />
       </ScrollView>
 
       <FilterBar

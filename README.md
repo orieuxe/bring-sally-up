@@ -46,6 +46,7 @@ src/
 │   ├── CalendarCarousel.tsx# Swipeable month heatmap
 │   ├── TrendChart.tsx      # Scatter + moving-average SVG chart
 │   ├── WeekdayTable.tsx    # Sortable weekday stats
+│   ├── TimeSlotTable.tsx   # Sortable time-of-day stats
 │   └── FilterBar.tsx       # Sticky range filter + ⋯ actions
 ├── utils/
 │   ├── color.ts            # scoreColor gradient, ACCENT, RECORD_GOLD
@@ -64,6 +65,7 @@ src/
 - **Trend chart**: moving average curve, scatter dots, auto-scaled Y axis.
 - **Filters**: sticky bottom bar (thumb zone) — 1M / 6M / 1Y / ALL, plus a ⋯ menu for clear/import/export. The 1M button shows the selected month's name; swiping a month forces 1M on that month. A period label on the top summary card (sessions / average / best) echoes the active filter.
 - **Weekday stats**: sortable table (avg time / sessions done / missed days).
+- **Time-of-day stats**: sortable table by slot (nuit 0h-8h, matin 8h-12h, midi 12h-14h, aprem 14h-18h, soir 18h-0h) — the session hour is stored alongside the date (`Attempt.hour`); older entries without it are excluded.
 - **Import**: paste `YYYY-MM-DD M:SS` lines.
 - **Calibration**: tap along with the song to record real timestamps (stored as custom cues).
 - **Export**: CSV download (date, duration, completed).

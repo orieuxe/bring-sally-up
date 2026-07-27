@@ -111,6 +111,60 @@ export function computeStats(attempts: Attempt[]): PeriodStats {
   };
 }
 
+export const TIME_SLOTS = [
+  {
+    label: 'nuit',
+    min: 0,
+    max: 8,
+  },
+  {
+    label: 'matin',
+    min: 8,
+    max: 12,
+  },
+  {
+    label: 'midi',
+    min: 12,
+    max: 14,
+  },
+  {
+    label: 'aprem',
+    min: 14,
+    max: 18,
+  },
+  {
+    label: 'soir',
+    min: 18,
+    max: 24,
+  },
+] as const;
+
+export interface TimeSlotRow {
+  slot: string;
+  idx: number;
+  avg: number;
+  done: number;
+}
+
+// Sessions without a stored hour (imports, pre-feature entries) are skipped.
+export function computeTimeSlotStats(attempts: Attempt[]): TimeSlotRow[] {
+  const sum = Array(TIME_SLOTS.length).fill(0);
+  const done = Array(TIME_SLOTS.length).fill(0);
+  for (const a of attempts) {
+    if (typeof a.hour !== 'number') continue;
+    const idx = TIME_SLOTS.findIndex(s => a.hour! >= s.min && a.hour! < s.max);
+    if (idx === -1) continue;
+    sum[idx] += a.duration ?? 0;
+    done[idx]++;
+  }
+  return TIME_SLOTS.map((s, i) => ({
+    slot: s.label,
+    idx: i,
+    avg: sum[i] / Math.max(done[i], 1),
+    done: done[i],
+  }));
+}
+
 export interface WeekdayRow {
   day: string;
   idx: number;
