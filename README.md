@@ -37,10 +37,22 @@ src/
 ├── screens/
 │   ├── HomeScreen.tsx      # Home: scores, streak, GO button
 │   ├── ChallengeScreen.tsx # Player: progress ring, UP/DOWN badges, time adjust
-│   ├── HistoryScreen.tsx   # Calendar carousel, trend chart, weekday stats, sessions
+│   ├── HistoryScreen.tsx   # History orchestration (state + composition)
 │   ├── ImportScreen.tsx    # Bulk import in M:SS format
 │   └── CalibrateScreen.tsx # Tap-to-calibrate cues (one-shot)
-├── storage.ts             # AsyncStorage CRUD (history, custom cues)
+├── components/history/    # History building blocks
+│   ├── PeriodSummary.tsx   # Period label + sessions/average/best
+│   ├── DayTooltip.tsx      # Selected/latest day details
+│   ├── CalendarCarousel.tsx# Swipeable month heatmap
+│   ├── TrendChart.tsx      # Scatter + moving-average SVG chart
+│   ├── WeekdayTable.tsx    # Sortable weekday stats
+│   └── FilterBar.tsx       # Sticky range filter + ⋯ actions
+├── utils/
+│   ├── color.ts            # scoreColor gradient, ACCENT, RECORD_GOLD
+│   ├── time.ts             # formatTime (M:SS)
+│   └── history.ts          # Pure helpers: ranges, months, stats
+├── theme.ts               # Shared color tokens
+├── storage.ts             # AsyncStorage CRUD (history, daily best, custom cues)
 └── types.ts               # Shared types
 ```
 

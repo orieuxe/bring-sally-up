@@ -12,6 +12,7 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory } from '../storage';
 import type { RootStackParamList, Attempt } from '../types';
 import { scoreColor, ACCENT, ACCENT_RGB } from '../utils/color';
+import { formatTime } from '../utils/time';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
 
@@ -40,8 +41,6 @@ export default function HomeScreen({ navigation }: Props) {
     });
   }, []));
 
-  const fmt = (t: number) => `${Math.floor(t / 60)}:${(t % 60).toString().padStart(2, '0')}`;
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.center}>
@@ -62,7 +61,7 @@ export default function HomeScreen({ navigation }: Props) {
           >
             <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>record</Text>
             <Text style={[styles.scoreValue, { fontSize: ms(42) }]}>
-              {bestScore?.duration != null ? fmt(bestScore.duration) : '--:--'}
+              {bestScore?.duration != null ? formatTime(bestScore.duration) : '--:--'}
             </Text>
             <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
               {bestScore?.date
@@ -86,7 +85,7 @@ export default function HomeScreen({ navigation }: Props) {
               color: lastScore?.duration != null ? scoreColor(lastScore.duration, recentAvg) : '#fff',
             }]}
             >
-              {lastScore?.duration != null ? fmt(lastScore.duration) : '--:--'}
+              {lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
             </Text>
             <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
               {lastScore?.date

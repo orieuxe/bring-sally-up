@@ -12,9 +12,10 @@ import { createAudioPlayer } from 'expo-audio';
 import Svg, { Circle } from 'react-native-svg';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from '../data/cues';
-import { getCustomCues, getHistory } from '../storage';
+import { getCustomCues, getHistory, saveDailyBest } from '../storage';
 import type { Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
+import { formatTime } from '../utils/time';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Challenge'>;
@@ -139,27 +140,18 @@ export default function ChallengeScreen({ navigation }: Props) {
   };
 
   const saveScore = async () => {
-    const today = new Date().toISOString().split('T')[0];
-    const history = await getHistory();
-    const todayEntry = history.find(a => a.date === today);
     const score = cueIndexRef.current + 1;
-    if (todayEntry && adjustedTime <= (todayEntry.duration ?? 0)) {
-      const mins = Math.floor((todayEntry.duration ?? 0) / 60);
-      const secs = ((todayEntry.duration ?? 0) % 60).toString().padStart(2, '0');
-      setSaveMsg(`Déjà fait mieux aujourd'hui : ${mins}:${secs}`);
-      return;
-    }
-    const filtered = history.filter(a => a.date !== today);
-    filtered.push({
-      date: today,
+    const result = await saveDailyBest({
+      date: new Date().toISOString().split('T')[0],
       cuesCompleted: score,
       totalCues: cuesRef.current.length,
       completed: score >= cuesRef.current.length,
       duration: adjustedTime,
     });
-    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
-    await AsyncStorage.setItem('@sally_history', JSON.stringify(filtered));
+    if (!result.saved) {
+      setSaveMsg(`Déjà fait mieux aujourd'hui : ${formatTime(result.existing ?? 0)}`);
+      return;
+    }
     navigation.goBack();
   };
 
@@ -207,9 +199,7 @@ export default function ChallengeScreen({ navigation }: Props) {
               </Svg>
               <View style={styles.ringCenter}>
                 <Text style={[styles.bigTimer, { fontSize: ms(48) }]}>
-                  {Math.floor(displayTime / 60)}
-                  :
-                  {Math.floor(displayTime % 60).toString().padStart(2, '0')}
+                  {formatTime(displayTime)}
                 </Text>
                 {isIntro && (
                   <Text style={styles.introCount}>{TIMER_OFFSET - Math.ceil(elapsed)}</Text>
@@ -268,9 +258,7 @@ export default function ChallengeScreen({ navigation }: Props) {
               color: scoreColor(adjustedTime, recentAvg),
             }]}
             >
-              {Math.floor(adjustedTime / 60)}
-              :
-              {(adjustedTime % 60).toString().padStart(2, '0')}
+              {formatTime(adjustedTime)}
             </Text>
             <TouchableOpacity
               style={[
