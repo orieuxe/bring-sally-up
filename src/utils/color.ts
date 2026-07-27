@@ -1,4 +1,5 @@
 export const ACCENT = '#b76d0c';
+export const RECORD_GOLD = '#e89b2e';
 
 function hexToRgb(hex: string): number[] {
   const v = parseInt(hex.replace('#', ''), 16);

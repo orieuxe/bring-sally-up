@@ -15,7 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory, clearHistory } from '../storage';
 import type { Attempt, RootStackParamList } from '../types';
-import { scoreColor, ACCENT } from '../utils/color';
+import { scoreColor, ACCENT, RECORD_GOLD } from '../utils/color';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'History'> };
 const RANGES = ['1M', '6M', '1Y', 'ALL'] as const;
@@ -44,7 +44,8 @@ export default function HistoryScreen({ navigation }: Props) {
   const [carouselIdx, setCarouselIdx] = useState(-1);
   const [sortBy, setSortBy] = useState<'day' | 'avg' | 'done' | 'miss' | null>(null);
   const [sortAsc, setSortAsc] = useState(false);
-  const { width: screenWidth } = useWindowDimensions();
+  const [showActions, setShowActions] = useState(false);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   // Heatmap generator
   const getMonthData = (offset: number) => {
@@ -267,6 +268,53 @@ export default function HistoryScreen({ navigation }: Props) {
     return Math.max(0, ...history.map(a => a.duration ?? 0));
   }, [history]);
 
+  // Tooltip has no empty state: default to the most recent session
+  const shownDay = useMemo(() => {
+    if (selectedDay) return selectedDay;
+    const latest = history.find(a => (a.duration ?? 0) > 0);
+    return latest
+      ? {
+          date: latest.date,
+          duration: latest.duration ?? 0,
+        }
+      : null;
+  }, [selectedDay, history]);
+
+  const shownAttempt = useMemo(
+    () => (shownDay ? history.find(a => a.date === shownDay.date) : undefined),
+    [shownDay, history],
+  );
+
+  const selectedMonth = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  }, [monthOffset]);
+
+  const periodLabel = useMemo(() => {
+    if (range === '1M') {
+      return selectedMonth.toLocaleDateString('fr', {
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+    return {
+      '6M': '6 derniers mois',
+      '1Y': '12 derniers mois',
+      'ALL': 'depuis le début',
+    }[range];
+  }, [range, selectedMonth]);
+
+  const rangeLabel = (r: Range) => {
+    if (r !== '1M') return RANGE_LABELS[r];
+    const now = new Date();
+    return selectedMonth.getFullYear() === now.getFullYear()
+      ? selectedMonth.toLocaleDateString('fr', { month: 'long' })
+      : selectedMonth.toLocaleDateString('fr', {
+          month: 'short',
+          year: '2-digit',
+        });
+  };
+
   const handleClear = () => {
     const doClear = async () => {
       await clearHistory();
@@ -316,7 +364,8 @@ export default function HistoryScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    // maxHeight pins the filter bar to the viewport on web (body scrolls there)
+    <View style={[styles.container, { maxHeight: screenHeight }]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
@@ -324,67 +373,87 @@ export default function HistoryScreen({ navigation }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Day tooltip — always visible at top */}
-        <View style={styles.tooltip}>
-          {selectedDay
-            ? (
-                <>
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={{
-                      color: '#888',
-                      fontSize: ms(11),
-                      textTransform: 'capitalize',
-                    }}
-                    >
-                      {new Date(selectedDay.date).toLocaleDateString('fr', { weekday: 'short' }).replace('.', '')}
-                    </Text>
-                    <Text style={{
-                      color: '#888',
-                      fontSize: ms(18),
-                      fontWeight: '500',
-                    }}
-                    >
-                      {new Date(selectedDay.date).getDate()}
-                    </Text>
-                  </View>
-                  <View style={styles.tooltipRow}>
-                    <Text style={styles.tooltipLabel}>REPS</Text>
-                    <Text style={styles.tooltipVal}>
-                      {Math.round((selectedDay.duration ?? 0) / 3.4)}
-                    </Text>
-                  </View>
-                  <View style={styles.tooltipRow}>
-                    <Text style={styles.tooltipLabel}>TEMPS</Text>
-                    <Text style={styles.tooltipVal}>{formatTime(selectedDay.duration)}</Text>
-                  </View>
-                  <View style={styles.tooltipRow}>
-                    <Text style={styles.tooltipLabel}>MOYENNE</Text>
-                    <Text style={[styles.tooltipVal, {
-                      color: (selectedDay.duration ?? 0) >= stats.avg ? '#4caf50' : '#e25a5a',
-                    }]}
-                    >
-                      {(() => {
-                        if (stats.avg === 0) return '--';
-                        const diff = (selectedDay.duration ?? 0) - stats.avg;
-                        const sign = diff >= 0 ? '+' : '';
-                        return `${sign}${Math.round(diff)}s`;
-                      })()}
-                    </Text>
-                  </View>
-                </>
-              )
-            : (
+        {/* Period summary — reflects the active filter */}
+        <View style={styles.statsCard}>
+          <Text style={[styles.periodLabel, { fontSize: ms(10) }]}>{periodLabel}</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Text style={[styles.statVal, { fontSize: ms(22) }]}>{stats.count}</Text>
+              <Text style={[styles.statLabel, { fontSize: ms(10) }]}>sessions</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(Math.round(stats.avg))}</Text>
+              <Text style={[styles.statLabel, { fontSize: ms(10) }]}>moyenne</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(stats.max)}</Text>
+              <Text style={[styles.statLabel, { fontSize: ms(10) }]}>
+                {range === 'ALL' ? 'record' : 'meilleur'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Day tooltip — always filled (latest session by default) */}
+        {shownDay && (
+          <View style={styles.tooltip}>
+            <View style={{ alignItems: 'center' }}>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+              }}
+              >
+                <View style={[styles.tooltipDot, { backgroundColor: getHeatColor(shownDay.duration) }]} />
                 <Text style={{
-                  color: '#555',
-                  fontSize: ms(12),
-                  textAlign: 'center',
-                  width: '100%',
+                  color: '#888',
+                  fontSize: ms(11),
+                  textTransform: 'capitalize',
                 }}
                 >
-                  cliquer sur un jour pour le voir en détails
+                  {new Date(shownDay.date).toLocaleDateString('fr', { weekday: 'short' }).replace('.', '')}
                 </Text>
+              </View>
+              <Text style={{
+                color: '#888',
+                fontSize: ms(18),
+                fontWeight: '500',
+              }}
+              >
+                {new Date(shownDay.date).getDate()}
+              </Text>
+              {shownDay.duration === allTimeBest && (
+                <Text style={[styles.tooltipRecord, { fontSize: ms(9) }]}>★ record</Text>
               )}
-        </View>
+            </View>
+            <View style={styles.tooltipRow}>
+              <Text style={styles.tooltipLabel}>REPS</Text>
+              <Text style={styles.tooltipVal}>
+                {shownAttempt && shownAttempt.cuesCompleted > 0
+                  ? shownAttempt.cuesCompleted
+                  : Math.round((shownDay.duration ?? 0) / 3.4)}
+              </Text>
+            </View>
+            <View style={styles.tooltipRow}>
+              <Text style={styles.tooltipLabel}>TEMPS</Text>
+              <Text style={styles.tooltipVal}>{formatTime(shownDay.duration)}</Text>
+            </View>
+            <View style={styles.tooltipRow}>
+              <Text style={styles.tooltipLabel}>MOYENNE</Text>
+              <Text style={[styles.tooltipVal, {
+                color: (shownDay.duration ?? 0) >= stats.avg ? '#4caf50' : '#e25a5a',
+              }]}
+              >
+                {(() => {
+                  if (stats.avg === 0) return '--';
+                  const diff = (shownDay.duration ?? 0) - stats.avg;
+                  const sign = diff >= 0 ? '+' : '';
+                  return `${sign}${Math.round(diff)}s`;
+                })()}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Calendar carousel — only months with data */}
         {allMonths.length > 0 && (
@@ -498,33 +567,6 @@ export default function HistoryScreen({ navigation }: Props) {
         {/* Trend chart */}
         {chartData.length >= 2 && (
           <View style={styles.chartSection}>
-            <View style={styles.statsRow}>
-              <View style={styles.stat}>
-                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{stats.count}</Text>
-                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>sessions</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(Math.round(stats.avg))}</Text>
-                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>moyenne</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={[styles.statVal, { fontSize: ms(22) }]}>{formatTime(stats.max)}</Text>
-                <Text style={[styles.statLabel, { fontSize: ms(10) }]}>record</Text>
-              </View>
-            </View>
-            <View style={styles.rangeRow}>
-              {RANGES.map(r => (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.rangeBtn, range === r && styles.rangeBtnActive]}
-                  onPress={() => setRange(r)}
-                >
-                  <Text style={[styles.rangeText, range === r && styles.rangeTextActive]}>
-                    {RANGE_LABELS[r]}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
             {/* @ts-ignore */}
             <Svg width={chartWidth} height={chartHeight} overflow="visible">
               {/* Y-axis grid lines + labels */}
@@ -581,7 +623,13 @@ export default function HistoryScreen({ navigation }: Props) {
                     })}
                   >
                     <Rect x={x - 10} y={y - 10} width={20} height={20} fill="transparent" />
-                    <Circle cx={x} cy={y} r={3} fill={getHeatColor(d.time)} opacity={0.8} />
+                    {d.time === allTimeBest
+                      ? (
+                          <SvgText x={x} y={y + 4} fill={RECORD_GOLD} fontSize={ms(11)} fontWeight="bold" textAnchor="middle">★</SvgText>
+                        )
+                      : (
+                          <Circle cx={x} cy={y} r={3} fill={getHeatColor(d.time)} opacity={0.8} />
+                        )}
                   </G>
                 );
               })}
@@ -665,39 +713,50 @@ export default function HistoryScreen({ navigation }: Props) {
           })()}
         </View>
 
-        <View style={styles.bottomRow}>
-          <TouchableOpacity
-            style={[styles.clearBtn, {
-              paddingHorizontal: scale(20),
-              paddingVertical: scale(10),
-              borderRadius: scale(20),
-            }]}
-            onPress={handleClear}
-          >
-            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>effacer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.clearBtn, {
-              paddingHorizontal: scale(20),
-              paddingVertical: scale(10),
-              borderRadius: scale(20),
-            }]}
-            onPress={() => navigation.navigate('Import')}
-          >
-            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>importer</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.clearBtn, {
-              paddingHorizontal: scale(20),
-              paddingVertical: scale(10),
-              borderRadius: scale(20),
-            }]}
-            onPress={exportCSV}
-          >
-            <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>exporter</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+
+      {/* Rare actions — behind the ⋯ button of the bottom bar */}
+      {showActions && (
+        <View style={styles.actionsSheet}>
+          {([
+            ['effacer', handleClear],
+            ['importer', () => navigation.navigate('Import')],
+            ['exporter', exportCSV],
+          ] as [string, () => void][]).map(([label, action]) => (
+            <TouchableOpacity
+              key={label}
+              style={styles.actionBtn}
+              onPress={() => { setShowActions(false); action(); }}
+            >
+              <Text style={[styles.clearBtnText, { fontSize: ms(12) }]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      {/* Sticky filter bar — thumb zone */}
+      <View style={styles.bottomBar}>
+        {RANGES.map(r => (
+          <TouchableOpacity
+            key={r}
+            style={[styles.rangeBtn, range === r && styles.rangeBtnActive]}
+            onPress={() => setRange(r)}
+          >
+            <Text
+              style={[styles.rangeText, { fontSize: ms(12) }, range === r && styles.rangeTextActive]}
+              numberOfLines={1}
+            >
+              {rangeLabel(r)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+        <TouchableOpacity
+          style={[styles.moreBtn, showActions && styles.moreBtnActive]}
+          onPress={() => setShowActions(s => !s)}
+        >
+          <Text style={styles.moreBtnText}>⋯</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -716,22 +775,12 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   backLink: { color: '#aaa' },
-  rangeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    justifyContent: 'center',
-    width: '100%',
-    marginVertical: 8,
-  },
   rangeBtn: {
     flex: 1,
-    paddingVertical: 6,
-    borderRadius: 8,
-    marginBottom: 10,
+    paddingVertical: 10,
+    borderRadius: 10,
     backgroundColor: '#1c1c22',
     alignItems: 'center',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-    elevation: 2,
   },
   rangeBtnActive: { backgroundColor: ACCENT },
   rangeText: {
@@ -740,14 +789,69 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   rangeTextActive: { color: '#16161a' },
+  // Sticky filter bar (thumb zone)
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 14,
+    backgroundColor: '#121216',
+    borderTopWidth: 1,
+    borderTopColor: '#26262d',
+  },
+  moreBtn: {
+    width: scale(38),
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#1c1c22',
+    alignItems: 'center',
+  },
+  moreBtnActive: { backgroundColor: '#2a2a33' },
+  moreBtnText: {
+    fontSize: 16,
+    lineHeight: 16,
+    color: '#888',
+    fontWeight: '700',
+  },
+  actionsSheet: {
+    position: 'absolute',
+    right: 12,
+    bottom: scale(58),
+    backgroundColor: '#22222a',
+    borderRadius: 12,
+    paddingVertical: 4,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+    elevation: 6,
+  },
+  actionBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
+  statsCard: {
+    backgroundColor: '#1c1c22',
+    borderRadius: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  periodLabel: {
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 2,
+  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 10,
+    paddingTop: 6,
     paddingBottom: 4,
   },
   stat: { alignItems: 'center' },
@@ -799,7 +903,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     textAlign: 'center',
-    color: '#e89b2e',
+    color: RECORD_GOLD,
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 2,
@@ -841,6 +945,16 @@ const styles = StyleSheet.create({
     fontSize: ms(9),
     color: '#555',
     marginTop: 2,
+  },
+  tooltipDot: {
+    width: scale(8),
+    height: scale(8),
+    borderRadius: scale(4),
+  },
+  tooltipRecord: {
+    color: RECORD_GOLD,
+    fontWeight: '700',
+    marginTop: 1,
   },
   // Chart
   chartSection: {
@@ -908,22 +1022,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
-  },
-  // Clear
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginTop: 16,
-  },
-  clearBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: '#1c1c22',
-    alignItems: 'center',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-    elevation: 2,
   },
   clearBtnText: {
     fontSize: 13,

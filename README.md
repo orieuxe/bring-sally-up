@@ -48,9 +48,9 @@ src/
 
 - **Player**: SVG progress ring (green→red), UP/DOWN badges, tap anywhere to give up, ± time adjust before save. One entry per day (overwrites if better).
 - **Calendar**: swipeable carousel, cells colored (red→green vs period average).
-- **Tooltip**: tap a cell to see time, estimated reps, ±s vs average.
+- **Tooltip**: always filled (latest session by default) — color dot, real reps, time, ±s vs average, ★ badge on the all-time record.
 - **Trend chart**: moving average curve, scatter dots, auto-scaled Y axis.
-- **Filters**: 1M / 6M / 1Y / ALL. Swiping a month forces 1M on that month.
+- **Filters**: sticky bottom bar (thumb zone) — 1M / 6M / 1Y / ALL, plus a ⋯ menu for clear/import/export. The 1M button shows the selected month's name; swiping a month forces 1M on that month. A period label on the top summary card (sessions / average / best) echoes the active filter.
 - **Weekday stats**: sortable table (avg time / sessions done / missed days).
 - **Import**: paste `YYYY-MM-DD M:SS` lines.
 - **Calibration**: tap along with the song to record real timestamps (stored as custom cues).
