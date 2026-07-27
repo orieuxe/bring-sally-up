@@ -21,14 +21,15 @@ type Props = {
 
 export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props) {
   const date = new Date(day.date);
-  const reps = attempt && attempt.cuesCompleted > 0
-    ? attempt.cuesCompleted
-    : Math.round(day.duration / SECONDS_PER_REP);
+  const hasRealReps = attempt != null && attempt.cuesCompleted > 0;
+  const reps = hasRealReps
+    ? String(attempt.cuesCompleted)
+    : `~${Math.round(day.duration / SECONDS_PER_REP)}`;
   const diff = day.duration - avg;
 
   return (
     <View style={styles.tooltip}>
-      <View style={{ alignItems: 'center' }}>
+      <View style={styles.dateCol}>
         <View style={styles.dateRow}>
           <View style={[styles.dot, { backgroundColor: color }]} />
           <Text style={[styles.weekday, { fontSize: ms(11) }]}>
@@ -36,9 +37,10 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
           </Text>
         </View>
         <Text style={[styles.dayNum, { fontSize: ms(18) }]}>{date.getDate()}</Text>
-        {isRecord && (
-          <Text style={[styles.record, { fontSize: ms(9) }]}>★ record</Text>
-        )}
+        {/* Always rendered so the date never shifts when the badge appears */}
+        <Text style={[styles.record, { fontSize: ms(9) }, !isRecord && styles.recordHidden]}>
+          ★ record
+        </Text>
       </View>
       <View style={styles.col}>
         <Text style={styles.label}>REPS</Text>
@@ -69,6 +71,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: scale(62),
   },
+  dateCol: {
+    alignItems: 'center',
+    minWidth: scale(54),
+  },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,6 +98,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 1,
   },
+  recordHidden: { opacity: 0 },
   col: { alignItems: 'center' },
   val: {
     fontSize: ms(18),
