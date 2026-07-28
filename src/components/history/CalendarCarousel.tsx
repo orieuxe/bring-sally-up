@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     // cell has overflow:hidden, so the badge must stay inside its bounds
     position: 'absolute',
     top: scale(1),
-    right: scale(1),
+    right: scale(3),
     color: RECORD_GOLD,
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.6)',

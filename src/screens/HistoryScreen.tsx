@@ -200,7 +200,7 @@ export default function HistoryScreen({ navigation }: Props) {
         <CalendarCarousel
           months={allMonths}
           defaultIndex={carouselDefaultIdx}
-          selectedDate={selectedDay?.date ?? null}
+          selectedDate={shownDay?.date ?? null}
           allTimeBest={allTimeBest}
           getColor={getHeatColor}
           onSelectDay={setSelectedDay}
@@ -217,7 +217,7 @@ export default function HistoryScreen({ navigation }: Props) {
           yMinAll={yMinAll}
           allTimeBest={allTimeBest}
           width={screenWidth - 40}
-          selectedDate={selectedDay?.date ?? null}
+          selectedDate={shownDay?.date ?? null}
           getColor={getHeatColor}
           onSelectDay={setSelectedDay}
         />
