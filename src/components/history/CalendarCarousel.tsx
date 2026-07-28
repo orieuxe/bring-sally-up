@@ -86,19 +86,19 @@ export default function CalendarCarousel({
                     : onSelectDay(null)}
                   activeOpacity={c.score > 0 ? 0.7 : 1}
                 >
+                  <Text style={[styles.cellText, c.score > 0 && styles.cellTextActive, { fontSize: ms(10) }]}>
+                    {c.day}
+                  </Text>
                   {c.score > 0 && c.score === allTimeBest && (
                     <Text style={[
                       styles.star,
-                      { fontSize: ms(11) },
+                      { fontSize: ms(13) },
                       selectedDate === c.label && { color: COLORS.text },
                     ]}
                     >
                       ★
                     </Text>
                   )}
-                  <Text style={[styles.cellText, c.score > 0 && styles.cellTextActive, { fontSize: ms(10) }]}>
-                    {c.day}
-                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -165,11 +165,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   star: {
+    // cell has overflow:hidden, so the badge must stay inside its bounds
     position: 'absolute',
     top: scale(1),
-    left: 0,
-    right: 0,
-    textAlign: 'center',
+    right: scale(1),
     color: RECORD_GOLD,
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.6)',

@@ -29,6 +29,10 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
 
   return (
     <View style={styles.tooltip}>
+      {/* Absolutely positioned: never shifts the row layout when it appears */}
+      {isRecord && (
+        <Text style={[styles.record, { fontSize: ms(9) }]}>★ record</Text>
+      )}
       <View style={styles.dateCol}>
         <View style={styles.dateRow}>
           <View style={[styles.dot, { backgroundColor: color }]} />
@@ -37,10 +41,6 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
           </Text>
         </View>
         <Text style={[styles.dayNum, { fontSize: ms(18) }]}>{date.getDate()}</Text>
-        {/* Always rendered so the date never shifts when the badge appears */}
-        <Text style={[styles.record, { fontSize: ms(9) }, !isRecord && styles.recordHidden]}>
-          ★ record
-        </Text>
       </View>
       <View style={styles.col}>
         <Text style={styles.label}>REPS</Text>
@@ -70,11 +70,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     minHeight: scale(62),
+    position: 'relative',
   },
-  dateCol: {
-    alignItems: 'center',
-    minWidth: scale(54),
-  },
+  dateCol: { alignItems: 'center' },
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -94,11 +92,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   record: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
     color: RECORD_GOLD,
     fontWeight: '700',
-    marginTop: 1,
   },
-  recordHidden: { opacity: 0 },
   col: { alignItems: 'center' },
   val: {
     fontSize: ms(18),
