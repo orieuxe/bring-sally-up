@@ -24,6 +24,7 @@ export default [
         ignoreTemplateLiterals: true,
         ignoreRegExpLiterals: true }],
       '@stylistic/object-curly-newline': ['warn', { multiline: true, consistent: true }],
+      '@stylistic/arrow-parens': ['error', 'as-needed'],
       '@typescript-eslint/no-require-imports': 'off',
       'no-unused-vars': 'off',
     },

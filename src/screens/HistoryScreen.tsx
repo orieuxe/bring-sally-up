@@ -35,7 +35,10 @@ type Props = { navigation: StackNavigationProp<RootStackParamList, 'History'> };
 export default function HistoryScreen({ navigation }: Props) {
   const [history, setHistory] = useState<Attempt[]>([]);
   const [range, setRange] = useState<Range>('1M');
-  const [monthOffset, setMonthOffset] = useState(0);
+  const [targetMonth, setTargetMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  });
   const [selectedDay, setSelectedDay] = useState<DayRef | null>(null);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
@@ -44,21 +47,21 @@ export default function HistoryScreen({ navigation }: Props) {
   );
 
   const filtered = useMemo(
-    () => filterByRange(history, range, monthOffset),
-    [history, range, monthOffset],
+    () => filterByRange(history, range, targetMonth),
+    [history, range, targetMonth],
   );
   const stats = useMemo(() => computeStats(filtered), [filtered]);
   const allMonths = useMemo(() => buildMonths(history), [history]);
   const carouselDefaultIdx = useMemo(
-    () => Math.max(0, allMonths.findIndex(m => m.offset === 0)),
-    [allMonths],
+    () => Math.max(0, allMonths.findIndex(m => m.year === targetMonth.year && m.month === targetMonth.month)),
+    [allMonths, targetMonth],
   );
 
   const allTimeBest = useMemo(
     () => Math.max(0, ...history.map(a => a.duration ?? 0)),
     [history],
   );
-  const yMinAll = useMemo(() => {
+  const allTimeWorst = useMemo(() => {
     const times = history.map(a => a.duration ?? 0).filter(t => t > 0);
     return times.length > 0 ? Math.min(...times) : 0;
   }, [history]);
@@ -91,10 +94,10 @@ export default function HistoryScreen({ navigation }: Props) {
     [shownDay, history],
   );
 
-  const selectedMonth = useMemo(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
-  }, [monthOffset]);
+  const selectedMonth = useMemo(
+    () => new Date(targetMonth.year, targetMonth.month - 1, 1),
+    [targetMonth],
+  );
 
   const periodLabel = useMemo(() => {
     if (range === '1M') {
@@ -204,8 +207,8 @@ export default function HistoryScreen({ navigation }: Props) {
           allTimeBest={allTimeBest}
           getColor={getHeatColor}
           onSelectDay={setSelectedDay}
-          onMonthSnap={(offset) => {
-            setMonthOffset(offset);
+          onMonthSnap={m => {
+            setTargetMonth(m);
             setRange('1M');
             setSelectedDay(null);
           }}
@@ -214,7 +217,7 @@ export default function HistoryScreen({ navigation }: Props) {
         <TrendChart
           data={chartData}
           avg={stats.avg}
-          yMinAll={yMinAll}
+          allTimeWorst={allTimeWorst}
           allTimeBest={allTimeBest}
           width={screenWidth - 40}
           selectedDate={shownDay?.date ?? null}
