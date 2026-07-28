@@ -23,7 +23,7 @@ type Props = {
 
 type Phase = 'running' | 'finished';
 
-const TIMER_OFFSET = 0;
+const TIMER_OFFSET = 6;
 const CUE_DELAY = -0.25;
 
 const audioSource = require('../../assets/sally.mp3');
