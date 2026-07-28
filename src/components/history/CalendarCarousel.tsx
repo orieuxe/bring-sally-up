@@ -66,41 +66,38 @@ export default function CalendarCarousel({
               {Array.from({ length: hm.firstDow === 0 ? 6 : hm.firstDow - 1 }).map((_, i) => (
                 <View key={`pad-${hm.offset}-${i}`} style={[styles.cell, cellSize]} />
               ))}
-              {hm.cells.map(c => (
-                <TouchableOpacity
-                  key={c.label}
-                  style={[styles.cell, cellSize, {
-                    backgroundColor: getColor(c.score),
-                    ...(selectedDate === c.label && c.score > 0
-                      ? {
-                          borderWidth: 3,
-                          borderColor: COLORS.text,
-                        }
-                      : {}),
-                  }]}
-                  onPress={() => c.score > 0
-                    ? onSelectDay({
-                        date: c.label,
-                        duration: c.score,
-                      })
-                    : onSelectDay(null)}
-                  activeOpacity={c.score > 0 ? 0.7 : 1}
-                >
-                  <Text style={[styles.cellText, c.score > 0 && styles.cellTextActive, { fontSize: ms(10) }]}>
-                    {c.day}
-                  </Text>
-                  {c.score > 0 && c.score === allTimeBest && (
-                    <Text style={[
-                      styles.star,
-                      { fontSize: ms(13) },
-                      selectedDate === c.label && { color: COLORS.text },
-                    ]}
+              {hm.cells.map((c) => {
+                const isSelected = selectedDate === c.label && c.score > 0;
+                return (
+                  <TouchableOpacity
+                    key={c.label}
+                    style={[styles.cell, cellSize, { backgroundColor: getColor(c.score) }]}
+                    onPress={() => c.score > 0
+                      ? onSelectDay({
+                          date: c.label,
+                          duration: c.score,
+                        })
+                      : onSelectDay(null)}
+                    activeOpacity={c.score > 0 ? 0.7 : 1}
+                  >
+                    <Text
+                      style={[styles.cellText, c.score > 0 && styles.cellTextActive, { fontSize: ms(10) }]}
                     >
-                      ★
+                      {c.day}
                     </Text>
-                  )}
-                </TouchableOpacity>
-              ))}
+                    {c.score > 0 && c.score === allTimeBest && (
+                      <Text style={[styles.star, { fontSize: ms(13) }, isSelected && { color: COLORS.text }]}>
+                        ★
+                      </Text>
+                    )}
+                    {/* Overlay, not a border on the cell itself: selection never shifts the
+                        content box the day number and star are positioned against */}
+                    {isSelected && (
+                      <View pointerEvents="none" style={[styles.selectionRing, cellSize]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         )}
@@ -173,5 +170,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 2,
+  },
+  selectionRing: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    borderWidth: 3,
+    borderColor: COLORS.text,
   },
 });

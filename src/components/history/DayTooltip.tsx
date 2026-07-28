@@ -29,10 +29,6 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
 
   return (
     <View style={styles.tooltip}>
-      {/* Absolutely positioned: never shifts the row layout when it appears */}
-      {isRecord && (
-        <Text style={[styles.record, { fontSize: ms(9) }]}>★ record</Text>
-      )}
       <View style={styles.dateCol}>
         <View style={styles.dateRow}>
           <View style={[styles.dot, { backgroundColor: color }]} />
@@ -52,9 +48,15 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
       </View>
       <View style={styles.col}>
         <Text style={styles.label}>MOYENNE</Text>
-        <Text style={[styles.val, { color: diff >= 0 ? COLORS.good : COLORS.bad }]}>
-          {avg === 0 ? '--' : `${diff >= 0 ? '+' : ''}${Math.round(diff)}s`}
-        </Text>
+        {isRecord
+          ? (
+              <Text style={[styles.val, styles.recordVal, { fontSize: ms(15) }]}>★ record</Text>
+            )
+          : (
+              <Text style={[styles.val, { color: diff >= 0 ? COLORS.good : COLORS.bad }]}>
+                {avg === 0 ? '--' : `${diff >= 0 ? '+' : ''}${Math.round(diff)}s`}
+              </Text>
+            )}
       </View>
     </View>
   );
@@ -70,7 +72,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     minHeight: scale(62),
-    position: 'relative',
   },
   dateCol: { alignItems: 'center' },
   dateRow: {
@@ -91,10 +92,7 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontWeight: '500',
   },
-  record: {
-    position: 'absolute',
-    top: 8,
-    right: 12,
+  recordVal: {
     color: RECORD_GOLD,
     fontWeight: '700',
   },
