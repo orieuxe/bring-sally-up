@@ -13,20 +13,18 @@ export interface MonthData {
   cells: { day: number; score: number; label: string }[];
   firstDow: number;
   monthLabel: string;
-  offset: number;
+  year: number;
+  month: number; // 1-indexed
 }
 
-export function getMonthData(history: Attempt[], offset: number): MonthData {
-  const now = new Date();
-  const base = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-  const year = base.getFullYear();
-  const month = base.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDow = new Date(year, month, 1).getDay();
+export function getMonthData(history: Attempt[], year: number, month: number): MonthData {
+  const base = new Date(year, month - 1, 1);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDow = base.getDay();
   const scores: Record<string, number> = {};
   for (const a of history) {
     const d = new Date(a.date);
-    if (d.getFullYear() === year && d.getMonth() === month) {
+    if (d.getFullYear() === year && d.getMonth() === month - 1) {
       scores[a.date] = a.duration ?? 0;
     }
   }
@@ -36,7 +34,7 @@ export function getMonthData(history: Attempt[], offset: number): MonthData {
   });
   const cells: MonthData['cells'] = [];
   for (let d = 1; d <= daysInMonth; d++) {
-    const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const ds = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     cells.push({
       day: d,
       score: scores[ds] ?? 0,
@@ -47,34 +45,35 @@ export function getMonthData(history: Attempt[], offset: number): MonthData {
     cells,
     firstDow,
     monthLabel,
-    offset,
+    year,
+    month,
   };
 }
 
 // Every month between the oldest session and now that has at least one score.
 export function buildMonths(history: Attempt[]): MonthData[] {
-  const months: MonthData[] = [];
-  const now = new Date();
-  let minOff = 0;
+  const seen = new Map<string, { year: number; month: number }>();
   for (const a of history) {
     const d = new Date(a.date);
-    const off = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
-    if (off < minOff) minOff = off;
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (!seen.has(key)) seen.set(key, { year: d.getFullYear(), month: d.getMonth() + 1 });
   }
-  for (let off = minOff; off <= 0; off++) {
-    const data = getMonthData(history, off);
-    if (data.cells.some(c => c.score > 0)) months.push(data);
-  }
-  return months;
+  return [...seen.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, m]) => getMonthData(history, m.year, m.month))
+    .filter(m => m.cells.some(c => c.score > 0));
 }
 
-// 1M targets the month pointed at by monthOffset; other ranges are rolling.
-export function filterByRange(history: Attempt[], range: Range, monthOffset: number): Attempt[] {
+export function filterByRange(
+  history: Attempt[],
+  range: Range,
+  targetMonth: { year: number; month: number },
+): Attempt[] {
   const now = new Date();
-  const base = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
   if (range === '1M') {
-    const end = new Date(base.getFullYear(), base.getMonth() + 1, 0);
-    return history.filter((a) => {
+    const base = new Date(targetMonth.year, targetMonth.month - 1, 1);
+    const end = new Date(targetMonth.year, targetMonth.month, 0);
+    return history.filter(a => {
       const d = new Date(a.date);
       return d >= base && d <= end;
     });

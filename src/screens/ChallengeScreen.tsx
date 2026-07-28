@@ -193,8 +193,7 @@ export default function ChallengeScreen({ navigation }: Props) {
                   strokeDasharray={ringCircumference}
                   strokeDashoffset={ringOffset}
                   strokeLinecap="round"
-                  rotation={-90}
-                  origin={`${ringSize / 2}, ${ringSize / 2}`}
+                  transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
                 />
               </Svg>
               <View style={styles.ringCenter}>

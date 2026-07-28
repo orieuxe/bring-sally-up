@@ -14,8 +14,14 @@ type Props = {
   allTimeBest: number;
   getColor: (score: number) => string;
   onSelectDay: (day: DayRef | null) => void;
-  onMonthSnap: (offset: number) => void;
+  onMonthSnap: (month: { year: number; month: number }) => void;
 };
+
+function weekCount(year: number, month: number) {
+  const mondayOffset = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month, 0).getDate();
+  return Math.ceil((mondayOffset + daysInMonth) / 7);
+}
 
 export default function CalendarCarousel({
   months, defaultIndex, selectedDate, allTimeBest, getColor, onSelectDay, onMonthSnap,
@@ -26,8 +32,11 @@ export default function CalendarCarousel({
 
   if (months.length === 0) return null;
 
+  const currentMonth = months[idx] ?? months[defaultIndex];
+  const extraScale = weekCount(currentMonth.year, currentMonth.month) > 5 ? scale(23) : 0;
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { height: scale(250) + extraScale }]}>
       <TouchableOpacity
         onPress={() => carouselRef.current?.prev()}
         disabled={idx === 0}
@@ -39,13 +48,13 @@ export default function CalendarCarousel({
         ref={carouselRef}
         style={{
           flex: 1,
-          height: scale(260),
+          height: scale(250) + extraScale,
         }}
         data={months}
         defaultIndex={defaultIndex}
         itemSize={Math.min(screenWidth - 60, scale(340))}
         onSnapToItem={(i: number) => {
-          onMonthSnap(months[i].offset);
+          onMonthSnap({ year: months[i].year, month: months[i].month });
           setIdx(i);
         }}
         renderItem={({ item: hm }: { item: MonthData }) => (
@@ -64,9 +73,9 @@ export default function CalendarCarousel({
                 </View>
               ))}
               {Array.from({ length: hm.firstDow === 0 ? 6 : hm.firstDow - 1 }).map((_, i) => (
-                <View key={`pad-${hm.offset}-${i}`} style={[styles.cell, cellSize]} />
+                <View key={`pad-${hm.year}-${hm.month}-${i}`} style={[styles.cell, cellSize]} />
               ))}
-              {hm.cells.map((c) => {
+              {hm.cells.map(c => {
                 const isSelected = selectedDate === c.label && c.score > 0;
                 return (
                   <TouchableOpacity
@@ -91,7 +100,7 @@ export default function CalendarCarousel({
                     {/* Overlay, not a border on the cell itself: selection never shifts the
                         content box the day number and star are positioned against */}
                     {isSelected && (
-                      <View pointerEvents="none" style={[styles.selectionRing, cellSize]} />
+                      <View style={[styles.selectionRing, cellSize, { pointerEvents: 'none' }]} />
                     )}
                   </TouchableOpacity>
                 );
@@ -119,7 +128,7 @@ const cellSize = {
 
 const styles = StyleSheet.create({
   wrap: {
-    height: scale(260),
+    height: scale(250),
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -167,6 +176,7 @@ const styles = StyleSheet.create({
     color: RECORD_GOLD,
     fontWeight: '700',
     textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 2,
   },
   selectionRing: {

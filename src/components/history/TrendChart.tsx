@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
 import Svg, { Circle, G, Line, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 import { COLORS } from '../../theme';
@@ -12,7 +12,7 @@ export type ChartPoint = { date: string; time: number; ts: number };
 type Props = {
   data: ChartPoint[];
   avg: number;
-  yMinAll: number; // min duration over the WHOLE history, keeps y-scale stable
+  allTimeWorst: number;
   allTimeBest: number;
   width: number;
   selectedDate: string | null;
@@ -29,21 +29,21 @@ const PAD = {
 };
 
 export default function TrendChart({
-  data, avg, yMinAll, allTimeBest, width, selectedDate, getColor, onSelectDay,
+  data, avg, allTimeWorst, allTimeBest, width, selectedDate, getColor, onSelectDay,
 }: Props) {
   const height = scale(CHART_HEIGHT);
 
   const scales = useMemo(() => {
     if (data.length < 2) return null;
-    const maxY = Math.max(...data.map(d => d.time));
-    const yScale = maxY + (maxY - yMinAll) * 0.15; // 15% padding above max
-    const yBase = Math.max(0, yMinAll - (maxY - yMinAll) * 0.1); // 10% below min
-    const minX = data[0].ts;
-    const maxX = data[data.length - 1].ts;
+    const bestTime = Math.max(...data.map(d => d.time));
+    const yMin = Math.max(0, allTimeWorst - (bestTime - allTimeWorst) * 0.1); // 10% below min
+    const yMax = bestTime + (bestTime - allTimeWorst) * 0.15; // 15% above max
+    const xMin = data[0].ts;
+    const xMax = data[data.length - 1].ts;
     const x = (ts: number) =>
-      PAD.l + ((ts - minX) / (maxX - minX || 1)) * (width - PAD.l - PAD.r);
+      PAD.l + ((ts - xMin) / (xMax - xMin || 1)) * (width - PAD.l - PAD.r);
     const y = (t: number) =>
-      PAD.t + (1 - (t - yBase) / (yScale - yBase || 1)) * (height - PAD.t - PAD.b);
+      PAD.t + (1 - (t - yMin) / (yMax - yMin || 1)) * (height - PAD.t - PAD.b);
 
     // Moving average trend curve (window = 20% of points)
     const window = Math.max(3, Math.ceil(data.length * 0.2));
@@ -58,20 +58,24 @@ export default function TrendChart({
     return {
       x,
       y,
-      yMax: yScale,
-      yMin: yBase,
+      yMax,
+      yMin,
       linePath,
     };
-  }, [data, yMinAll, width, height]);
+  }, [data, allTimeWorst, width, height]);
 
   if (!scales) return null;
   const { x, y, yMax, yMin, linePath } = scales;
 
   const gridVals: number[] = [];
   const step = Math.max(5, Math.round((yMax - yMin) / 4 / 5) * 5);
-  for (let v = Math.ceil(yMin / step) * step; v <= yMax + step / 2; v += step) gridVals.push(v);
+  for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) gridVals.push(v);
 
   const selectedPt = selectedDate ? data.find(d => d.date === selectedDate) : undefined;
+
+  // react-native-svg's web touchable mixin crashes Rect/G on web; onClick
+  // bypasses it there, but only onPress fires on native.
+  const pressHandlerKey = Platform.OS === 'web' ? 'onClick' : 'onPress';
 
   return (
     <View style={styles.card}>
@@ -105,14 +109,20 @@ export default function TrendChart({
         <Polyline points={linePath} fill="none" stroke={ACCENT} strokeWidth={1} opacity={0.5} />
         {/* Scatter points — record day gets the gold star */}
         {data.map((d, i) => (
-          <G
-            key={i}
-            onPress={() => onSelectDay({
-              date: d.date,
-              duration: d.time,
-            })}
-          >
-            <Rect x={x(d.ts) - 10} y={y(d.time) - 10} width={20} height={20} fill="transparent" />
+          <G key={i}>
+            <Rect
+              x={x(d.ts) - 10}
+              y={y(d.time) - 10}
+              width={20}
+              height={20}
+              fill="transparent"
+              {...{
+                [pressHandlerKey]: () => onSelectDay({
+                  date: d.date,
+                  duration: d.time,
+                }),
+              }}
+            />
             {d.time === allTimeBest
               ? (
                   // Selected record: the star itself turns white (no ring)

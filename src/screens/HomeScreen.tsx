@@ -23,7 +23,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [recentAvg, setRecentAvg] = useState(0);
 
   useFocusEffect(useCallback(() => {
-    getHistory().then((h) => {
+    getHistory().then(h => {
       if (h.length > 0) {
         setLastScore(h[0]);
         setBestScore(h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0]));
