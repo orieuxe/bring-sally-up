@@ -40,7 +40,7 @@ export default function FilterBar({ range, labelFor, onRange, actions }: Props) 
             onPress={() => onRange(r)}
           >
             <Text
-              style={[styles.btnText, { fontSize: ms(12) }, range === r && styles.btnTextActive]}
+              style={[styles.btnText, { fontSize: ms(13) }, range === r && styles.btnTextActive]}
               numberOfLines={1}
             >
               {labelFor(r)}
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   },
   btnActive: { backgroundColor: ACCENT },
   btnText: {
-    color: COLORS.faint,
+    color: COLORS.muted,
     fontWeight: '600',
   },
   btnTextActive: { color: COLORS.bg },
