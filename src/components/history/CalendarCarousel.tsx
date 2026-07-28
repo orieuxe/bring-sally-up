@@ -86,9 +86,7 @@ export default function CalendarCarousel({
                       {c.day}
                     </Text>
                     {c.score > 0 && c.score === allTimeBest && (
-                      <Text style={[styles.star, { fontSize: ms(13) }, isSelected && { color: COLORS.text }]}>
-                        ★
-                      </Text>
+                      <Text style={[styles.star, { fontSize: ms(13) }]}>★</Text>
                     )}
                     {/* Overlay, not a border on the cell itself: selection never shifts the
                         content box the day number and star are positioned against */}

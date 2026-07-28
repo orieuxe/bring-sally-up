@@ -47,15 +47,17 @@ export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props
         <Text style={styles.val}>{formatTime(day.duration)}</Text>
       </View>
       <View style={styles.col}>
-        <Text style={styles.label}>MOYENNE</Text>
         {isRecord
           ? (
               <Text style={[styles.val, styles.recordVal, { fontSize: ms(15) }]}>★ record</Text>
             )
           : (
-              <Text style={[styles.val, { color: diff >= 0 ? COLORS.good : COLORS.bad }]}>
-                {avg === 0 ? '--' : `${diff >= 0 ? '+' : ''}${Math.round(diff)}s`}
-              </Text>
+              <>
+                <Text style={styles.label}>MOYENNE</Text>
+                <Text style={[styles.val, { color: diff >= 0 ? COLORS.good : COLORS.bad }]}>
+                  {avg === 0 ? '--' : `${diff >= 0 ? '+' : ''}${Math.round(diff)}s`}
+                </Text>
+              </>
             )}
       </View>
     </View>
