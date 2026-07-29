@@ -147,6 +147,7 @@ export default function ChallengeScreen({ navigation }: Props) {
       totalCues: cuesRef.current.length,
       completed: score >= cuesRef.current.length,
       duration: adjustedTime,
+      hour: new Date().getHours(),
     });
     if (!result.saved) {
       setSaveMsg(`Déjà fait mieux aujourd'hui : ${formatTime(result.existing ?? 0)}`);
