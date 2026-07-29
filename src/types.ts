@@ -9,6 +9,7 @@ export interface Attempt {
   totalCues: number;
   completed: boolean;
   duration?: number;
+  hour?: number;
 }
 
 export type RootStackParamList = {

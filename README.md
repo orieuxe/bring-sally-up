@@ -38,7 +38,7 @@ src/
 ## Features
 
 - **Player**: progress ring colored by score, UP/DOWN cue badges, tap to give up, ± time adjust before save. One entry per day (keeps the best).
-- **History**: swipeable calendar heatmap, trend chart, weekday stats table, period summary. Sticky bottom filter bar (month / 6M / 1Y / all) driving the whole screen.
+- **History**: swipeable calendar heatmap, trend chart, weekday and time-of-day stats tables, period summary. Sticky bottom filter bar (month / 6M / 1Y / all) driving the whole screen.
 - **Record**: all-time best marked with a ★ across calendar, chart and tooltip.
 - **Import / Export**: paste `YYYY-MM-DD M:SS` lines in, CSV out.
 - **Calibration**: tap along with the song to record custom cue timestamps.
