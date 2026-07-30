@@ -170,6 +170,7 @@ export interface WeekdayRow {
   avg: number;
   done: number;
   miss: number;
+  missPercent: number;
 }
 
 export function computeWeekdayStats(attempts: Attempt[]): WeekdayRow[] {
@@ -181,6 +182,7 @@ export function computeWeekdayStats(attempts: Attempt[]): WeekdayRow[] {
       avg: 0,
       done: 0,
       miss: 0,
+      missPercent: 0,
     }));
   }
   const dates = attempts.map(a => a.date);
@@ -206,5 +208,6 @@ export function computeWeekdayStats(attempts: Attempt[]): WeekdayRow[] {
     avg: sum[i] / Math.max(done[i], 1),
     done: done[i],
     miss: total[i] - done[i],
+    missPercent: total[i] > 0 ? Math.round(((total[i] - done[i]) / total[i]) * 100) : 0,
   }));
 }

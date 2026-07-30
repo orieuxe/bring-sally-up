@@ -33,7 +33,7 @@ export default function FilterBar({ range, labelFor, onRange, actions, bottomIns
           ))}
         </View>
       )}
-      <View style={[styles.bar, { paddingBottom: 14 + bottomInset }]}>
+      <View style={[styles.bar, { paddingBottom: 6 + bottomInset }]}>
         {RANGES.map(r => (
           <TouchableOpacity
             key={r}
