@@ -180,7 +180,7 @@ export default function HistoryScreen({ navigation }: Props) {
   return (
     // maxHeight pins the filter bar to the viewport on web (body scrolls there)
     <View style={[styles.container, { maxHeight: screenHeight }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 4 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
         </TouchableOpacity>

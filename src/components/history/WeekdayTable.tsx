@@ -19,7 +19,11 @@ export default function WeekdayTable({ attempts }: Props) {
     if (!sortBy) return base;
     const dir = sortAsc ? 1 : -1;
     return [...base].sort((a, b) => {
-      const val = sortBy === 'day' ? a.idx - b.idx : a[sortBy] - b[sortBy];
+      const val = sortBy === 'day'
+        ? a.idx - b.idx
+        : sortBy === 'miss'
+          ? a.missPercent - b.missPercent
+          : a[sortBy] - b[sortBy];
       return val * dir;
     });
   }, [attempts, sortBy, sortAsc]);
@@ -40,6 +44,7 @@ export default function WeekdayTable({ attempts }: Props) {
   const worstDone = Math.min(...rows.map(d => d.done));
   const bestAvg = Math.max(...rows.map(d => d.avg));
   const worstAvg = Math.min(...rows.map(d => (d.done > 0 ? d.avg : Infinity)));
+  const worstMissPercent = Math.max(...rows.map(d => d.missPercent));
 
   return (
     <View style={styles.card}>
@@ -70,7 +75,14 @@ export default function WeekdayTable({ attempts }: Props) {
             >
               {d.done}
             </Text>
-            <Text style={[styles.cellNum, { fontSize: ms(13) }]}>{d.miss}</Text>
+            <Text style={[styles.cellNum, {
+              fontSize: ms(13),
+              color: d.missPercent === worstMissPercent && worstMissPercent > 0 ? COLORS.bad : COLORS.body,
+            }]}
+            >
+              {d.missPercent}
+              %
+            </Text>
             <Text style={[styles.cellNum, {
               fontSize: ms(13),
               color: avgColor,
