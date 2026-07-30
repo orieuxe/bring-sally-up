@@ -26,9 +26,11 @@ export default function ImportScreen({ navigation }: Props) {
     const records: Attempt[] = [];
 
     for (const line of lines) {
-      // Format: "YYYY-MM-DD M:SS" or "DD/MM/YYYY M:SS" or "DD/MM HH:MM:SS"
+      // Format: "YYYY-MM-DD M:SS" or "DD/MM/YYYY M:SS" or "DD/MM M:SS",
+      // each with an optional trailing hour-of-day (0-23) for the
+      // "par tranche horaire" stats, e.g. "2026-07-25 1:08 14".
       let match = line.match(
-        /(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}\/\d{2})[\t\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/,
+        /(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4}|\d{2}\/\d{2})[\t\s]+(\d{1,2}):(\d{2})(?:[\t\s]+(\d{1,2})h?)?/,
       );
       if (match) {
         let date = match[1];
@@ -44,12 +46,14 @@ export default function ImportScreen({ navigation }: Props) {
         const minutes = parseInt(match[2], 10);
         const seconds = parseInt(match[3], 10);
         const duration = minutes * 60 + seconds;
+        const hour = match[4] !== undefined ? parseInt(match[4], 10) : undefined;
         records.push({
           date,
           cuesCompleted: 0, // will be computed by storage if needed
           totalCues: 61,
           completed: duration >= 200,
           duration,
+          ...(hour !== undefined ? { hour } : {}),
         });
         continue;
       }
@@ -100,6 +104,8 @@ export default function ImportScreen({ navigation }: Props) {
         • 25/07/2026 1:08
         {'\n'}
         • 25/07 1:08 (année auto-détectée)
+        {'\n'}
+        • 25/07 1:08 14 (+ heure optionnelle)
         {'\n'}
         Une ligne par date
       </Text>

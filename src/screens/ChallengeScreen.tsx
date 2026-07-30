@@ -203,7 +203,7 @@ export default function ChallengeScreen({ navigation }: Props) {
       {phase === 'running' && (
         <TouchableOpacity style={styles.container} activeOpacity={1} onPress={isIntro ? undefined : giveUp}>
           <View style={styles.center}>
-            <View style={styles.ringContainer}>
+            <View style={[styles.ringContainer, { width: ringSize, height: ringSize }]}>
               <Svg width={ringSize} height={ringSize} style={{ position: 'absolute' }}>
                 <Circle
                   cx={ringSize / 2}
