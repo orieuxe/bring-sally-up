@@ -56,20 +56,48 @@ export default function ChallengeScreen({ navigation }: Props) {
     });
   }, []);
 
-  // Auto-start on mount
+  // Preload the audio player as soon as the screen mounts, and only start
+  // the challenge once it reports loaded. Starting the timer at the same
+  // moment as play() let native decoding/buffering (a few seconds on
+  // Android) desync the countdown/cues from the actual audio.
   useEffect(() => {
-    beginChallenge();
+    const player = createAudioPlayer(audioSource);
+    playerRef.current = player;
+    let started = false;
+
+    const start = () => {
+      if (started) return;
+      started = true;
+      beginChallenge();
+    };
+
+    const subscription = player.addListener('playbackStatusUpdate', status => {
+      if (status.isLoaded) start();
+    });
+    const fallback = setTimeout(start, 3000);
+
     return () => {
-      if (playerRef.current) playerRef.current.remove();
+      subscription.remove();
+      clearTimeout(fallback);
+      player.remove();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
+  // Stop audio the instant the screen loses focus (back button/gesture),
+  // instead of waiting for the pop animation to finish and the component
+  // to unmount — that gap let the old track overlap a freshly started one.
+  useEffect(() => navigation.addListener('blur', () => {
+    if (playerRef.current) playerRef.current.pause();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }), [navigation]);
+
   const playMusic = () => {
     try {
-      const player = createAudioPlayer(audioSource);
-      playerRef.current = player;
-      player.play();
+      playerRef.current?.play();
     } catch {
       // No audio
     }
