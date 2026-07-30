@@ -355,7 +355,9 @@ const styles = StyleSheet.create({
     marginTop: scale(4),
   },
   cueBadge: {
-    minWidth: scale(80),
+    // Fixed (not min) width: UP and DOWN must match exactly so switching
+    // between them doesn't jump in size.
+    width: scale(100),
     paddingHorizontal: scale(20),
     paddingVertical: scale(6),
     borderRadius: scale(12),
