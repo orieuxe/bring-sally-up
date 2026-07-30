@@ -20,10 +20,13 @@ const STOPS = PALETTE.map((h, i) => ({
   color: hexToRgb(h),
 }));
 
+// Used when there's no history yet, so the very first challenge still
+// gradients its progress ring instead of sitting on one flat color.
+const SIMULATED_AVG = 90;
+
 export function scoreColor(score: number, avg: number): string {
   if (score === 0) return '#1a1a1a';
-  // No average yet (first ever session): median green instead of dull grey
-  const ratio = avg > 0 ? Math.min(score / avg, 1.5) : 1;
+  const ratio = Math.min(score / (avg > 0 ? avg : SIMULATED_AVG), 1.5);
 
   let lo = STOPS[0], hi = STOPS[STOPS.length - 1];
   for (let i = 0; i < STOPS.length - 1; i++) {
