@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { moderateScale as ms } from 'react-native-size-matters';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory, clearHistory } from '../storage';
@@ -41,6 +42,7 @@ export default function HistoryScreen({ navigation }: Props) {
   });
   const [selectedDay, setSelectedDay] = useState<DayRef | null>(null);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => { getHistory().then(setHistory); }, []),
@@ -177,7 +179,7 @@ export default function HistoryScreen({ navigation }: Props) {
   return (
     // maxHeight pins the filter bar to the viewport on web (body scrolls there)
     <View style={[styles.container, { maxHeight: screenHeight }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
         </TouchableOpacity>
@@ -232,6 +234,7 @@ export default function HistoryScreen({ navigation }: Props) {
         range={range}
         labelFor={rangeLabel}
         onRange={setRange}
+        bottomInset={insets.bottom}
         actions={[
           ['effacer', handleClear],
           ['importer', () => navigation.navigate('Import')],

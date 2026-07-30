@@ -16,6 +16,7 @@ import { getCustomCues, getHistory, saveDailyBest } from '../storage';
 import type { Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
 import { formatTime } from '../utils/time';
+import { COLORS } from '../theme';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Challenge'>;
@@ -368,9 +369,11 @@ const styles = StyleSheet.create({
     marginTop: scale(10),
   },
   cueUp: {
-    backgroundColor: 'rgba(76,175,80,0.25)',
+    // Green reads visually lighter than red at the same alpha, so it needs
+    // a bit more opacity to feel as bold as the DOWN badge.
+    backgroundColor: 'rgba(76,175,80,0.34)',
     borderWidth: 1,
-    borderColor: 'rgba(76,175,80,0.5)',
+    borderColor: 'rgba(76,175,80,0.62)',
   },
   cueDown: {
     backgroundColor: 'rgba(244,67,54,0.25)',
@@ -385,7 +388,7 @@ const styles = StyleSheet.create({
   },
   giveUpHint: {
     fontSize: ms(13),
-    color: '#333',
+    color: COLORS.hint,
   },
   giveUpHintHidden: { opacity: 0 },
   // Finished
@@ -448,6 +451,6 @@ const styles = StyleSheet.create({
   ignoreBtn: { padding: scale(12) },
   ignoreBtnText: {
     fontSize: ms(13),
-    color: '#444',
+    color: COLORS.hint,
   },
 });

@@ -11,10 +11,11 @@ type Props = {
   labelFor: (r: Range) => string;
   onRange: (r: Range) => void;
   actions: [string, () => void][];
+  bottomInset?: number;
 };
 
 // Sticky bottom bar (thumb zone) with rare actions folded behind ⋯
-export default function FilterBar({ range, labelFor, onRange, actions }: Props) {
+export default function FilterBar({ range, labelFor, onRange, actions, bottomInset = 0 }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -32,7 +33,7 @@ export default function FilterBar({ range, labelFor, onRange, actions }: Props) 
           ))}
         </View>
       )}
-      <View style={styles.bar}>
+      <View style={[styles.bar, { paddingBottom: 14 + bottomInset }]}>
         {RANGES.map(r => (
           <TouchableOpacity
             key={r}

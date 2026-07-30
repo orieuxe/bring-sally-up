@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
+import { createAudioPlayer } from 'expo-audio';
 import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory } from '../storage';
@@ -16,11 +17,42 @@ import { formatTime } from '../utils/time';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
 
+const audioSource = require('../../assets/sally.mp3');
+
 export default function HomeScreen({ navigation }: Props) {
   const [lastScore, setLastScore] = useState<Attempt | null>(null);
   const [bestScore, setBestScore] = useState<Attempt | null>(null);
   const [streak, setStreak] = useState(0);
   const [recentAvg, setRecentAvg] = useState(0);
+
+  // Silently play+pause the challenge track once, muted, so Android's
+  // one-time audio pipeline warm-up (AudioTrack/AudioFocus init) happens
+  // here instead of during the first real challenge, where it caused the
+  // music to start a few seconds behind the timer.
+  useEffect(() => {
+    let disposed = false;
+    const player = createAudioPlayer(audioSource);
+    player.volume = 0;
+
+    const subscription = player.addListener('playbackStatusUpdate', status => {
+      if (disposed || !status.isLoaded) return;
+      disposed = true;
+      player.play();
+      setTimeout(() => {
+        subscription.remove();
+        player.pause();
+        player.remove();
+      }, 150);
+    });
+
+    return () => {
+      if (!disposed) {
+        disposed = true;
+        subscription.remove();
+        player.remove();
+      }
+    };
+  }, []);
 
   useFocusEffect(useCallback(() => {
     getHistory().then(h => {
