@@ -5,6 +5,7 @@ import Svg, { Circle, G, Line, Polyline, Rect, Text as SvgText } from 'react-nat
 import { COLORS } from '../../theme';
 import { ACCENT, RECORD_GOLD } from '../../utils/color';
 import { formatTime } from '../../utils/time';
+import type { Range } from '../../utils/history';
 import type { DayRef } from './DayTooltip';
 
 export type ChartPoint = { date: string; time: number; ts: number };
@@ -15,6 +16,7 @@ type Props = {
   allTimeWorst: number;
   allTimeBest: number;
   width: number;
+  range: Range;
   selectedDate: string | null;
   getColor: (score: number) => string;
   onSelectDay: (day: DayRef) => void;
@@ -28,10 +30,17 @@ const PAD = {
   b: 22,
 };
 
+// French numeric date format (day/month[/year]) for the axis labels.
+function formatAxisDate(date: string, withYear: boolean): string {
+  const [y, m, d] = date.split('-');
+  return withYear ? `${d}/${m}/${y}` : `${d}/${m}`;
+}
+
 export default function TrendChart({
-  data, avg, allTimeWorst, allTimeBest, width, selectedDate, getColor, onSelectDay,
+  data, avg, allTimeWorst, allTimeBest, width, range, selectedDate, getColor, onSelectDay,
 }: Props) {
   const height = scale(CHART_HEIGHT);
+  const showYear = range === '1Y' || range === 'ALL';
 
   const scales = useMemo(() => {
     if (data.length < 2) return null;
@@ -101,10 +110,10 @@ export default function TrendChart({
           </React.Fragment>
         ))}
         <SvgText x={PAD.l} y={height - 6} fill={COLORS.muted} fontSize={ms(10, 0.8)} textAnchor="start">
-          {data[0].date.slice(5)}
+          {formatAxisDate(data[0].date, showYear)}
         </SvgText>
         <SvgText x={width - PAD.r} y={height - 6} fill={COLORS.muted} fontSize={ms(10, 0.8)} textAnchor="end">
-          {data[data.length - 1].date.slice(5)}
+          {formatAxisDate(data[data.length - 1].date, showYear)}
         </SvgText>
         {/* Average line */}
         <Line
