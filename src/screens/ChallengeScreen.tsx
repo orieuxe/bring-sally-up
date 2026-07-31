@@ -8,12 +8,11 @@ import {
   View,
 } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
-import type { AudioPlayer } from 'expo-audio';
 import Svg, { Circle } from 'react-native-svg';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from '../data/cues';
 import { getCustomCues, getHistory, saveDailyBest } from '../storage';
-import { getChallengePlayer } from '../challengeAudio';
+import { getChallengePlayer, startChallengeAudio, stopChallengeAudio } from '../challengeAudio';
 import type { Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
 import { formatTime } from '../utils/time';
@@ -41,7 +40,6 @@ export default function ChallengeScreen({ navigation }: Props) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const cueIndexRef = useRef(-1);
-  const playerRef = useRef<AudioPlayer | null>(null);
   const cuesRef = useRef<Cue[]>(BUILTIN_CUES);
   const songDurationRef = useRef<number>(BUILTIN_DURATION);
 
@@ -56,14 +54,12 @@ export default function ChallengeScreen({ navigation }: Props) {
     });
   }, []);
 
-  // Reuse the app-wide, already-warmed player (see challengeAudio.ts)
-  // instead of creating a fresh one: a brand new player's output track is
-  // cold and silently eats the first couple of seconds of audio on
-  // Android. Still wait for it to report loaded before starting the
+  // The app-wide player (see challengeAudio.ts) is already playing muted
+  // in a loop by the time this screen is reached in the vast majority of
+  // cases. Still wait for it to report loaded before starting the
   // challenge, in case the screen is reached before the warm-up finished.
   useEffect(() => {
     const player = getChallengePlayer();
-    playerRef.current = player;
     let started = false;
 
     const start = () => {
@@ -95,22 +91,16 @@ export default function ChallengeScreen({ navigation }: Props) {
   // instead of waiting for the pop animation to finish and the component
   // to unmount — that gap let the old track overlap a freshly started one.
   useEffect(() => navigation.addListener('blur', () => {
-    if (playerRef.current) playerRef.current.pause();
+    stopChallengeAudio();
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
   }), [navigation]);
 
-  // Resets to the start before playing: the shared player may still be
-  // sitting wherever a previous run left it.
   const playMusic = async () => {
     try {
-      const player = playerRef.current;
-      if (!player) return;
-      player.volume = 1;
-      await player.seekTo(0);
-      player.play();
+      await startChallengeAudio();
     } catch {
       // No audio
     }
@@ -141,7 +131,7 @@ export default function ChallengeScreen({ navigation }: Props) {
       if (elapsedSec >= songDurationRef.current) {
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = null;
-        if (playerRef.current) playerRef.current.pause();
+        stopChallengeAudio();
         finishChallenge();
       }
     }, 100);
@@ -176,7 +166,7 @@ export default function ChallengeScreen({ navigation }: Props) {
   const giveUp = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
-    if (playerRef.current) playerRef.current.pause();
+    stopChallengeAudio();
     setFailed(true);
     finishChallenge();
   };

@@ -20,6 +20,7 @@ type Props = {
 
 export default function ImportScreen({ navigation }: Props) {
   const [text, setText] = useState('');
+  const currentYear = new Date().getFullYear();
 
   const parseRecords = (): Attempt[] => {
     const lines = text.trim().split('\n').filter(Boolean);
@@ -34,10 +35,10 @@ export default function ImportScreen({ navigation }: Props) {
       );
       if (match) {
         let date = match[1];
-        // If no year, infer from format DD/MM
+        // If no year, assume the current year
         if (/^\d{2}\/\d{2}$/.test(date)) {
           const [d, m] = date.split('/');
-          const year = parseInt(m) >= 5 ? 2025 : 2026;
+          const year = new Date().getFullYear();
           date = `${year}-${m}-${d}`;
         } else if (date.includes('/')) {
           const [d, m, y] = date.split('/');
@@ -95,27 +96,22 @@ export default function ImportScreen({ navigation }: Props) {
       </View>
       <Text style={styles.title}>Importer des records</Text>
       <Text style={styles.help}>
-        Colle tes records texte ici.
-        {'\n'}
-        Formats acceptés :
-        {'\n'}
-        • 2026-07-25 1:08
-        {'\n'}
-        • 25/07/2026 1:08
-        {'\n'}
-        • 25/07 1:08 (année auto-détectée)
-        {'\n'}
-        • 25/07 1:08 14 (+ heure optionnelle)
-        {'\n'}
-        Une ligne par date
-        {'\n\n'}
-        Une date déjà existante est remplacée par la nouvelle valeur
-        importée.
+        {[
+          'Colle tes records texte ici.',
+          'Formats acceptés :',
+          `• ${currentYear}-07-25 1:08`,
+          `• 25/07/${currentYear} 1:08`,
+          `• 25/07 1:08 (${currentYear} par défaut)`,
+          '• 25/07 1:08 14 (+ heure optionnelle)',
+          'Une ligne par date',
+          '',
+          'Une date déjà existante est remplacée par la nouvelle valeur importée.',
+        ].join('\n')}
       </Text>
       <TextInput
         style={styles.input}
         multiline
-        placeholder={'2026-07-20 1:05\n2026-07-21 1:08\n2026-07-22 1:12'}
+        placeholder={`${currentYear}-07-20 1:05\n${currentYear}-07-21 1:08\n${currentYear}-07-22 1:12`}
         placeholderTextColor="#555"
         value={text}
         onChangeText={setText}

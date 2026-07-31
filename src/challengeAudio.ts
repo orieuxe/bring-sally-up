@@ -1,9 +1,13 @@
-import { createAudioPlayer, AudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setIsAudioActiveAsync, AudioPlayer } from 'expo-audio';
 
 export const CHALLENGE_AUDIO_SOURCE = require('../assets/sally.mp3');
 
+// Activate the audio session as early as possible (module scope, before any
+// component renders) — this negotiation is itself part of what made the
+// very first play() on Android eat the opening beats.
+setIsAudioActiveAsync(true).catch(() => {});
+
 let player: AudioPlayer | null = null;
-let warmupStarted = false;
 
 function getPlayer(): AudioPlayer {
   if (!player) {
@@ -12,36 +16,27 @@ function getPlayer(): AudioPlayer {
   return player;
 }
 
-// A fresh AudioPlayer's underlying output track is "cold": on Android the
-// first ever play() can silently eat the first couple of seconds of audio
-// while the hardware output path engages, even though playback position
-// (and therefore our timer sync) advances normally the whole time. Playing
-// it once, muted, well before the user reaches the challenge screen warms
-// that path up. Crucially this reuses the *same* player instance for the
-// real challenge instead of creating a new one, since a brand new player
-// would just be cold again.
+// Keeps the challenge track continuously playing, muted and looping, from
+// app launch onward — pausing it (even a warmed-up player) let the output
+// path go cold again, so a later play() still ate the opening beats.
+// Because it never actually stops, starting/stopping a challenge only ever
+// toggles volume + position, never play()/pause().
 export function warmUpChallengeAudio() {
-  if (warmupStarted) return;
-  warmupStarted = true;
   const p = getPlayer();
+  p.loop = true;
+  p.volume = 0;
 
-  const warm = () => {
-    p.volume = 0;
-    p.play();
-    setTimeout(() => {
-      p.pause();
-      p.seekTo(0);
-      p.volume = 1;
-    }, 300);
+  const start = () => {
+    if (p.isLoaded && !p.playing) p.play();
   };
 
   if (p.isLoaded) {
-    warm();
+    start();
   } else {
     const subscription = p.addListener('playbackStatusUpdate', status => {
       if (status.isLoaded) {
         subscription.remove();
-        warm();
+        start();
       }
     });
   }
@@ -49,4 +44,21 @@ export function warmUpChallengeAudio() {
 
 export function getChallengePlayer(): AudioPlayer {
   return getPlayer();
+}
+
+export async function startChallengeAudio(): Promise<void> {
+  const p = getPlayer();
+  p.loop = false;
+  await p.seekTo(0);
+  p.volume = 1;
+  if (!p.playing) p.play();
+}
+
+// Mutes and resumes the silent background loop instead of pausing, so the
+// output path stays warm for the next challenge.
+export function stopChallengeAudio() {
+  const p = getPlayer();
+  p.volume = 0;
+  p.loop = true;
+  if (!p.playing) p.play();
 }
