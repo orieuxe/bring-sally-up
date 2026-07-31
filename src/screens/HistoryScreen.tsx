@@ -223,6 +223,7 @@ export default function HistoryScreen({ navigation }: Props) {
           allTimeWorst={allTimeWorst}
           allTimeBest={allTimeBest}
           width={screenWidth - 40}
+          range={range}
           selectedDate={shownDay?.date ?? null}
           getColor={getHeatColor}
           onSelectDay={setSelectedDay}
