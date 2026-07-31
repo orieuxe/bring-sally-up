@@ -8,11 +8,12 @@ import {
   View,
 } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
-import { createAudioPlayer } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import Svg, { Circle } from 'react-native-svg';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from '../data/cues';
 import { getCustomCues, getHistory, saveDailyBest } from '../storage';
+import { getChallengePlayer } from '../challengeAudio';
 import type { Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
 import { formatTime } from '../utils/time';
@@ -27,8 +28,6 @@ type Phase = 'running' | 'finished';
 const TIMER_OFFSET = 6;
 const CUE_DELAY = -0.25;
 
-const audioSource = require('../../assets/sally.mp3');
-
 export default function ChallengeScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<Phase>('running');
   const [elapsed, setElapsed] = useState(0);
@@ -42,7 +41,7 @@ export default function ChallengeScreen({ navigation }: Props) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const cueIndexRef = useRef(-1);
-  const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
   const cuesRef = useRef<Cue[]>(BUILTIN_CUES);
   const songDurationRef = useRef<number>(BUILTIN_DURATION);
 
@@ -57,12 +56,13 @@ export default function ChallengeScreen({ navigation }: Props) {
     });
   }, []);
 
-  // Preload the audio player as soon as the screen mounts, and only start
-  // the challenge once it reports loaded. Starting the timer at the same
-  // moment as play() let native decoding/buffering (a few seconds on
-  // Android) desync the countdown/cues from the actual audio.
+  // Reuse the app-wide, already-warmed player (see challengeAudio.ts)
+  // instead of creating a fresh one: a brand new player's output track is
+  // cold and silently eats the first couple of seconds of audio on
+  // Android. Still wait for it to report loaded before starting the
+  // challenge, in case the screen is reached before the warm-up finished.
   useEffect(() => {
-    const player = createAudioPlayer(audioSource);
+    const player = getChallengePlayer();
     playerRef.current = player;
     let started = false;
 
@@ -72,6 +72,13 @@ export default function ChallengeScreen({ navigation }: Props) {
       beginChallenge();
     };
 
+    if (player.isLoaded) {
+      start();
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
+    }
+
     const subscription = player.addListener('playbackStatusUpdate', status => {
       if (status.isLoaded) start();
     });
@@ -80,7 +87,6 @@ export default function ChallengeScreen({ navigation }: Props) {
     return () => {
       subscription.remove();
       clearTimeout(fallback);
-      player.remove();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
@@ -96,23 +102,30 @@ export default function ChallengeScreen({ navigation }: Props) {
     }
   }), [navigation]);
 
-  const playMusic = () => {
+  // Resets to the start before playing: the shared player may still be
+  // sitting wherever a previous run left it.
+  const playMusic = async () => {
     try {
-      playerRef.current?.play();
+      const player = playerRef.current;
+      if (!player) return;
+      player.volume = 1;
+      await player.seekTo(0);
+      player.play();
     } catch {
       // No audio
     }
   };
 
-  const beginChallenge = () => {
+  const beginChallenge = async () => {
     setPhase('running');
     setElapsed(0);
     setCueIndex(-1);
     setCurrentCue(null);
     setFailed(false);
     cueIndexRef.current = -1;
+
+    await playMusic();
     startTimeRef.current = Date.now();
-    playMusic();
 
     timerRef.current = setInterval(() => {
       const now = Date.now();
@@ -227,26 +240,34 @@ export default function ChallengeScreen({ navigation }: Props) {
                 />
               </Svg>
               <View style={styles.ringCenter}>
-                <Text style={[styles.bigTimer, { fontSize: ms(48) }]}>
-                  {formatTime(displayTime)}
-                </Text>
-                {isIntro && (
-                  <Text style={styles.introCount}>{TIMER_OFFSET - Math.ceil(elapsed)}</Text>
-                )}
-                {!isIntro && currentCue && (
-                  <View style={[
-                    styles.cueBadge,
-                    currentCue.position === 'up' ? styles.cueUp : styles.cueDown,
-                  ]}
-                  >
-                    <Text style={styles.cueBadgeText}>
-                      {currentCue.position === 'up' ? 'UP' : 'DOWN'}
-                    </Text>
-                  </View>
-                )}
-                {!isIntro && !currentCue && (
-                  <View style={styles.cuePlaceholder} />
-                )}
+                {isIntro
+                  ? (
+                      <Text style={[styles.introCount, { fontSize: ms(48) }]}>
+                        {TIMER_OFFSET - Math.ceil(elapsed)}
+                      </Text>
+                    )
+                  : (
+                      <>
+                        <Text style={[styles.bigTimer, { fontSize: ms(48) }]}>
+                          {formatTime(displayTime)}
+                        </Text>
+                        {currentCue
+                          ? (
+                              <View style={[
+                                styles.cueBadge,
+                                currentCue.position === 'up' ? styles.cueUp : styles.cueDown,
+                              ]}
+                              >
+                                <Text style={styles.cueBadgeText}>
+                                  {currentCue.position === 'up' ? 'UP' : 'DOWN'}
+                                </Text>
+                              </View>
+                            )
+                          : (
+                              <View style={styles.cuePlaceholder} />
+                            )}
+                      </>
+                    )}
               </View>
             </View>
           </View>
@@ -350,10 +371,9 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   introCount: {
-    fontSize: ms(20),
     fontWeight: '700',
     color: '#666',
-    marginTop: scale(4),
+    fontVariant: ['tabular-nums'],
   },
   cueBadge: {
     // Fixed (not min) width: UP and DOWN must match exactly so switching

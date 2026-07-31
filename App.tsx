@@ -3,6 +3,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createStackNavigator } from '@react-navigation/stack';
+import { warmUpChallengeAudio } from './src/challengeAudio';
 import HomeScreen from './src/screens/HomeScreen';
 import ChallengeScreen from './src/screens/ChallengeScreen';
 import CalibrateScreen from './src/screens/CalibrateScreen';
@@ -30,6 +31,7 @@ export default function App() {
     if (Platform.OS === 'web') {
       document.body.style.overflow = 'auto';
     }
+    warmUpChallengeAudio();
   }, []);
 
   return (

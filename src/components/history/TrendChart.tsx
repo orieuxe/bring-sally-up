@@ -38,10 +38,20 @@ export default function TrendChart({
     const bestTime = Math.max(...data.map(d => d.time));
     const yMin = Math.max(0, allTimeWorst - (bestTime - allTimeWorst) * 0.1); // 10% below min
     const yMax = bestTime + (bestTime - allTimeWorst) * 0.15; // 15% above max
-    const xMin = data[0].ts;
-    const xMax = data[data.length - 1].ts;
-    const x = (ts: number) =>
-      PAD.l + ((ts - xMin) / (xMax - xMin || 1)) * (width - PAD.l - PAD.r);
+
+    // Gaps longer than ~3 weeks (an empty month or more between sessions)
+    // get capped instead of spent proportionally, so a long pause doesn't
+    // eat up horizontal space with nothing to show for it.
+    const GAP_CAP_MS = 21 * 24 * 60 * 60 * 1000;
+    const cx = [0];
+    for (let i = 1; i < data.length; i++) {
+      const gap = Math.min(data[i].ts - data[i - 1].ts, GAP_CAP_MS);
+      cx.push(cx[i - 1] + Math.max(gap, 0));
+    }
+    const cxMax = cx[cx.length - 1] || 1;
+
+    const xAt = (i: number) =>
+      PAD.l + (cx[i] / cxMax) * (width - PAD.l - PAD.r);
     const y = (t: number) =>
       PAD.t + (1 - (t - yMin) / (yMax - yMin || 1)) * (height - PAD.t - PAD.b);
 
@@ -52,11 +62,11 @@ export default function TrendChart({
       const end = Math.min(data.length, i + Math.floor(window / 2) + 1);
       const slice = data.slice(start, end);
       const smoothed = slice.reduce((s, d) => s + d.time, 0) / slice.length;
-      return `${x(data[i].ts)},${y(smoothed)}`;
+      return `${xAt(i)},${y(smoothed)}`;
     }).join(' ');
 
     return {
-      x,
+      xAt,
       y,
       yMax,
       yMin,
@@ -65,13 +75,14 @@ export default function TrendChart({
   }, [data, allTimeWorst, width, height]);
 
   if (!scales) return null;
-  const { x, y, yMax, yMin, linePath } = scales;
+  const { xAt, y, yMax, yMin, linePath } = scales;
 
   const gridVals: number[] = [];
   const step = Math.max(5, Math.round((yMax - yMin) / 4 / 5) * 5);
   for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) gridVals.push(v);
 
-  const selectedPt = selectedDate ? data.find(d => d.date === selectedDate) : undefined;
+  const selectedIdx = selectedDate ? data.findIndex(d => d.date === selectedDate) : -1;
+  const selectedPt = selectedIdx >= 0 ? data[selectedIdx] : undefined;
 
   // react-native-svg's web touchable mixin crashes Rect/G on web; onClick
   // bypasses it there, but only onPress fires on native.
@@ -111,7 +122,7 @@ export default function TrendChart({
         {data.map((d, i) => (
           <G key={i}>
             <Rect
-              x={x(d.ts) - 10}
+              x={xAt(i) - 10}
               y={y(d.time) - 10}
               width={20}
               height={20}
@@ -127,7 +138,7 @@ export default function TrendChart({
               ? (
                   // Selected record: the star itself turns white (no ring)
                   <SvgText
-                    x={x(d.ts)}
+                    x={xAt(i)}
                     y={y(d.time) + 4}
                     fill={selectedDate === d.date ? COLORS.text : RECORD_GOLD}
                     fontSize={ms(11)}
@@ -138,12 +149,12 @@ export default function TrendChart({
                   </SvgText>
                 )
               : (
-                  <Circle cx={x(d.ts)} cy={y(d.time)} r={3} fill={getColor(d.time)} opacity={0.8} />
+                  <Circle cx={xAt(i)} cy={y(d.time)} r={3} fill={getColor(d.time)} opacity={0.8} />
                 )}
           </G>
         ))}
         {selectedPt && selectedPt.time !== allTimeBest && (
-          <Circle cx={x(selectedPt.ts)} cy={y(selectedPt.time)} r={4} fill="none" stroke={COLORS.text} strokeWidth={2} />
+          <Circle cx={xAt(selectedIdx)} cy={y(selectedPt.time)} r={4} fill="none" stroke={COLORS.text} strokeWidth={2} />
         )}
       </Svg>
     </View>

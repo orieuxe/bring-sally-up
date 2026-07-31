@@ -7,40 +7,40 @@ import {
   Platform,
   Vibration,
 } from 'react-native';
-import { createAudioPlayer } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { saveCustomCues } from '../storage';
+import { getChallengePlayer } from '../challengeAudio';
 import type { RootStackParamList, Cue } from '../types';
 
 type Props = {
   navigation: StackNavigationProp<RootStackParamList, 'Calibrate'>;
 };
 
-const audioSource = require('../../assets/sally.mp3');
-
 export default function CalibrateScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<'ready' | 'playing' | 'done'>('ready');
   const [taps, setTaps] = useState<number[]>([]);
   const [elapsed, setElapsed] = useState(0);
-  const playerRef = useRef<ReturnType<typeof createAudioPlayer> | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     return () => {
-      if (playerRef.current) playerRef.current.remove();
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  const startCalibration = () => {
+  const startCalibration = async () => {
     setPhase('playing');
     setTaps([]);
     setElapsed(0);
 
     try {
-      const player = createAudioPlayer(audioSource);
+      const player = getChallengePlayer();
       playerRef.current = player;
+      player.volume = 1;
+      await player.seekTo(0);
       player.play();
     } catch {
       // No audio
