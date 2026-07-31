@@ -152,22 +152,6 @@ export default function HistoryScreen({ navigation }: Props) {
     }
   };
 
-  const exportCSV = () => {
-    const rows = [['date', 'duree', 'completed'].join(',')];
-    for (const a of history) {
-      rows.push([a.date, a.duration ?? 0, a.completed ? '1' : '0'].join(','));
-    }
-    if (Platform.OS === 'web') {
-      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'bring-sally-up.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  };
-
   if (history.length === 0) {
     return (
       <View style={styles.empty}>
@@ -241,7 +225,6 @@ export default function HistoryScreen({ navigation }: Props) {
         actions={[
           ['effacer', handleClear],
           ['importer', () => navigation.navigate('Import')],
-          ['exporter', exportCSV],
         ]}
       />
     </View>
