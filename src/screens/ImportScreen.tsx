@@ -109,8 +109,8 @@ export default function ImportScreen({ navigation }: Props) {
         {'\n'}
         Une ligne par date
         {'\n\n'}
-        Une date déjà existante n'est jamais écrasée : seule l'heure
-        est complétée si elle manquait, le reste ne bouge pas.
+        Une date déjà existante est remplacée par la nouvelle valeur
+        importée.
       </Text>
       <TextInput
         style={styles.input}
