@@ -108,6 +108,9 @@ export default function ImportScreen({ navigation }: Props) {
         • 25/07 1:08 14 (+ heure optionnelle)
         {'\n'}
         Une ligne par date
+        {'\n\n'}
+        Une date déjà existante n'est jamais écrasée : seule l'heure
+        est complétée si elle manquait, le reste ne bouge pas.
       </Text>
       <TextInput
         style={styles.input}
