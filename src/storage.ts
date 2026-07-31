@@ -45,14 +45,11 @@ export async function saveDailyBest(
   return { saved: true };
 }
 
+// Imported records replace whatever is already stored for that date.
 export async function importRecords(records: Attempt[]): Promise<Attempt[]> {
   const existing = await getHistory();
-  const merged = [...existing];
-  for (const r of records) {
-    if (!merged.find(e => e.date === r.date)) {
-      merged.push(r);
-    }
-  }
+  const merged = existing.filter(e => !records.some(r => r.date === e.date));
+  merged.push(...records);
   merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
   return merged;

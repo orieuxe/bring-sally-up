@@ -108,6 +108,9 @@ export default function ImportScreen({ navigation }: Props) {
         • 25/07 1:08 14 (+ heure optionnelle)
         {'\n'}
         Une ligne par date
+        {'\n\n'}
+        Une date déjà existante est remplacée par la nouvelle valeur
+        importée.
       </Text>
       <TextInput
         style={styles.input}
