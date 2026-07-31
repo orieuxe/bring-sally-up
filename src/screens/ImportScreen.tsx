@@ -34,10 +34,10 @@ export default function ImportScreen({ navigation }: Props) {
       );
       if (match) {
         let date = match[1];
-        // If no year, infer from format DD/MM
+        // If no year, assume the current year
         if (/^\d{2}\/\d{2}$/.test(date)) {
           const [d, m] = date.split('/');
-          const year = parseInt(m) >= 5 ? 2025 : 2026;
+          const year = new Date().getFullYear();
           date = `${year}-${m}-${d}`;
         } else if (date.includes('/')) {
           const [d, m, y] = date.split('/');
@@ -103,7 +103,7 @@ export default function ImportScreen({ navigation }: Props) {
         {'\n'}
         • 25/07/2026 1:08
         {'\n'}
-        • 25/07 1:08 (année auto-détectée)
+        • 25/07 1:08 (année en cours par défaut)
         {'\n'}
         • 25/07 1:08 14 (+ heure optionnelle)
         {'\n'}
