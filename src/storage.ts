@@ -49,8 +49,13 @@ export async function importRecords(records: Attempt[]): Promise<Attempt[]> {
   const existing = await getHistory();
   const merged = [...existing];
   for (const r of records) {
-    if (!merged.find(e => e.date === r.date)) {
+    const idx = merged.findIndex(e => e.date === r.date);
+    if (idx === -1) {
       merged.push(r);
+    } else if (typeof merged[idx].hour !== 'number' && typeof r.hour === 'number') {
+      // Same date already imported (e.g. before hours were supported) —
+      // backfill just the hour instead of silently skipping the line.
+      merged[idx] = { ...merged[idx], hour: r.hour };
     }
   }
   merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
