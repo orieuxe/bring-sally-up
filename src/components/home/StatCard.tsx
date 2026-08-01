@@ -11,10 +11,19 @@ type Props = {
   icon?: string;
   /** Personal best for that stat, shown under the value. */
   record?: string;
+  /** When that best was set. */
+  recordDate?: string;
 };
 
 // Both home cards share this shape: label, big current value, record under it.
-export default function StatCard({ label, value, valueColor = COLORS.text, icon, record }: Props) {
+export default function StatCard({
+  label,
+  value,
+  valueColor = COLORS.text,
+  icon,
+  record,
+  recordDate,
+}: Props) {
   return (
     <View style={[styles.card, {
       paddingHorizontal: scale(12),
@@ -33,9 +42,11 @@ export default function StatCard({ label, value, valueColor = COLORS.text, icon,
           {value}
         </Text>
       </View>
+      {/* Both lines always render so the two cards keep the same height. */}
       <Text style={[styles.record, { fontSize: ms(12) }]}>
         {record ? `record ${record}` : ' '}
       </Text>
+      <Text style={[styles.recordDate, { fontSize: ms(11) }]}>{recordDate ?? ' '}</Text>
     </View>
   );
 }
@@ -69,5 +80,10 @@ const styles = StyleSheet.create({
     color: COLORS.faint,
     marginTop: 4,
     letterSpacing: 1,
+  },
+  recordDate: {
+    color: COLORS.faint,
+    opacity: 0.7,
+    marginTop: 2,
   },
 });

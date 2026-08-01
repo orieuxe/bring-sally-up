@@ -161,10 +161,8 @@ const styles = StyleSheet.create({
     boxShadow: `0 4px 16px rgba(${ACCENT_RGB},0.45)`,
     elevation: 8,
   },
-  // Session already done: same button, dialed down so it stops shouting.
-  btnDone: {
-    opacity: 0.55,
-    boxShadow: `0 2px 8px rgba(${ACCENT_RGB},0.2)`,
-  },
+  // Session already done: same live button, just a calmer glow — no dimming,
+  // which would read as disabled.
+  btnDone: { boxShadow: `0 3px 10px rgba(${ACCENT_RGB},0.28)` },
   icon: { textAlign: 'center' },
 });

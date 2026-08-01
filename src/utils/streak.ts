@@ -22,6 +22,8 @@ export interface StreakInfo {
   current: number;
   /** Longest run ever, all history. */
   best: number;
+  /** Last day of that longest run, `YYYY-MM-DD`. */
+  bestEnd: string | null;
   doneToday: boolean;
 }
 
@@ -45,15 +47,21 @@ export function computeStreak(history: Attempt[], now: Date = new Date()): Strea
 
   const keys = [...done].sort();
   let best = 0;
+  let bestEnd: string | null = null;
   let run = 0;
   for (let i = 0; i < keys.length; i++) {
     run = i > 0 && shiftKey(keys[i], -1) === keys[i - 1] ? run + 1 : 1;
-    if (run > best) best = run;
+    // `>=` so an ongoing run that ties the record shows today's date
+    if (run >= best) {
+      best = run;
+      bestEnd = keys[i];
+    }
   }
 
   return {
     current,
     best,
+    bestEnd,
     doneToday,
   };
 }

@@ -24,8 +24,19 @@ type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
 const EMPTY_STREAK: StreakInfo = {
   current: 0,
   best: 0,
+  bestEnd: null,
   doneToday: false,
 };
+
+// Stored dates are UTC day keys — format them as such so the day never shifts.
+function formatDate(key: string): string {
+  return new Date(key).toLocaleDateString('fr', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
 
 // What the play button says. Nudges while the day is open, congratulates once done.
 function prompt(streak: StreakInfo, hasHistory: boolean): string {
@@ -44,16 +55,18 @@ export default function HomeScreen({ navigation }: Props) {
   useFocusEffect(useCallback(() => {
     getHistory().then(h => {
       setStreak(computeStreak(h));
-      if (h.length > 0) {
-        setLastScore(h[0]);
-        setBestScore(h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0]));
-        const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
-        if (recent.length > 0) setRecentAvg(recent.reduce((a, b) => a + b, 0) / recent.length);
-      }
+      setLastScore(h[0] ?? null);
+      setBestScore(
+        h.length > 0
+          ? h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0])
+          : null,
+      );
+      const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
+      setRecentAvg(recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0);
     });
   }, []));
 
-  const hasHistory = bestScore != null;
+  const hasHistory = lastScore != null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -66,23 +79,28 @@ export default function HomeScreen({ navigation }: Props) {
           BRING SALLY UP
         </Text>
 
-        <View style={[styles.cards, { gap: scale(16) }]}>
-          <StatCard
-            label="temps"
-            value={lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
-            valueColor={lastScore?.duration != null
-              ? scoreColor(lastScore.duration, recentAvg)
-              : COLORS.text}
-            record={bestScore?.duration != null ? formatTime(bestScore.duration) : undefined}
-          />
-          <StatCard
-            label="série"
-            value={String(streak.current)}
-            valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
-            icon={streak.current > 0 ? '🔥' : undefined}
-            record={streak.best > 0 ? `${streak.best} j` : undefined}
-          />
-        </View>
+        {/* Nothing to show before the first session — straight to the button. */}
+        {hasHistory && (
+          <View style={[styles.cards, { gap: scale(16) }]}>
+            <StatCard
+              label="temps"
+              value={lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
+              valueColor={lastScore?.duration != null
+                ? scoreColor(lastScore.duration, recentAvg)
+                : COLORS.text}
+              record={bestScore?.duration != null ? formatTime(bestScore.duration) : undefined}
+              recordDate={bestScore?.duration != null ? formatDate(bestScore.date) : undefined}
+            />
+            <StatCard
+              label="série"
+              value={String(streak.current)}
+              valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
+              icon={streak.current > 0 ? '🔥' : undefined}
+              record={streak.best > 0 ? `${streak.best} j` : undefined}
+              recordDate={streak.bestEnd ? formatDate(streak.bestEnd) : undefined}
+            />
+          </View>
+        )}
 
         <PlayButton
           pulsing={!streak.doneToday}
