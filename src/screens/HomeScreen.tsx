@@ -30,12 +30,15 @@ const EMPTY_STREAK: StreakInfo = {
 
 // Stored dates are UTC day keys — format them as such so the day never shifts.
 function formatDate(key: string): string {
-  return new Date(key).toLocaleDateString('fr', {
+  const d = new Date(key);
+  const text = d.toLocaleDateString('fr', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone: 'UTC',
   });
+  // Only the 1st takes an ordinal suffix in French.
+  return `le ${d.getUTCDate() === 1 ? text.replace('1 ', '1er ') : text}`;
 }
 
 // What the play button says. Nudges while the day is open, congratulates once done.
