@@ -7,8 +7,6 @@ type Props = {
   label: string;
   value: string;
   valueColor?: string;
-  /** Small glyph sitting on the value's baseline (flame, star…). */
-  icon?: string;
   /** Personal best for that stat, shown under the value. */
   record?: string;
   /** When that best was set. */
@@ -20,7 +18,6 @@ export default function StatCard({
   label,
   value,
   valueColor = COLORS.text,
-  icon,
   record,
   recordDate,
 }: Props) {
@@ -32,16 +29,13 @@ export default function StatCard({
     }]}
     >
       <Text style={[styles.label, { fontSize: ms(11) }]}>{label}</Text>
-      <View style={styles.valueRow}>
-        {icon && <Text style={{ fontSize: ms(20) }}>{icon}</Text>}
-        <Text style={[styles.value, {
-          fontSize: ms(42),
-          color: valueColor,
-        }]}
-        >
-          {value}
-        </Text>
-      </View>
+      <Text style={[styles.value, {
+        fontSize: ms(42),
+        color: valueColor,
+      }]}
+      >
+        {value}
+      </Text>
       {/* Both lines always render so the two cards keep the same height. */}
       <Text style={[styles.record, { fontSize: ms(12) }]}>
         {record ? `record ${record}` : ' '}
@@ -65,12 +59,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: 4,
   },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
-  },
-  icon: { lineHeight: undefined },
   value: {
     fontWeight: '300',
     letterSpacing: 2,

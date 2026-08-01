@@ -98,7 +98,6 @@ export default function HomeScreen({ navigation }: Props) {
               label="série"
               value={String(streak.current)}
               valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
-              icon={streak.current > 0 ? '🔥' : undefined}
               record={streak.best > 0 ? `${streak.best} j` : undefined}
               recordDate={streak.bestEnd ? formatDate(streak.bestEnd) : undefined}
             />
