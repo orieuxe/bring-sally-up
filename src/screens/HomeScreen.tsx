@@ -11,35 +11,56 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory } from '../storage';
 import type { RootStackParamList, Attempt } from '../types';
-import { scoreColor, ACCENT, ACCENT_RGB } from '../utils/color';
+import { scoreColor, ACCENT } from '../utils/color';
 import { formatTime } from '../utils/time';
+import { computeStreak } from '../utils/streak';
+import type { StreakInfo } from '../utils/streak';
+import StreakCard from '../components/home/StreakCard';
+import PlayButton from '../components/home/PlayButton';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
+
+const EMPTY_STREAK: StreakInfo = {
+  current: 0,
+  best: 0,
+  doneToday: false,
+  week: [],
+};
+
+// What the play button says. Nudges while the day is open, congratulates once done.
+function prompt(streak: StreakInfo, hasHistory: boolean): string {
+  if (streak.doneToday) return 'séance du jour validée';
+  if (streak.current === 0) return hasHistory ? 'relance ta série' : 'première séance';
+  if (streak.current + 1 > streak.best) return `${streak.current + 1} jours = nouveau record`;
+  return `ne casse pas ta série de ${streak.current} jours`;
+}
+
+function subPrompt(streak: StreakInfo): string | null {
+  if (streak.doneToday) return 'encore une pour améliorer le temps ?';
+  if (streak.current > 0) return 'plus qu\'aujourd\'hui à tenir';
+  return null;
+}
 
 export default function HomeScreen({ navigation }: Props) {
   const [lastScore, setLastScore] = useState<Attempt | null>(null);
   const [bestScore, setBestScore] = useState<Attempt | null>(null);
-  const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState<StreakInfo>(EMPTY_STREAK);
   const [recentAvg, setRecentAvg] = useState(0);
 
   useFocusEffect(useCallback(() => {
     getHistory().then(h => {
+      setStreak(computeStreak(h));
       if (h.length > 0) {
         setLastScore(h[0]);
         setBestScore(h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0]));
-        let s = 0;
-        const today = new Date();
-        for (let i = 0; i < h.length; i++) {
-          const d = new Date(h[i].date);
-          const e = new Date(today); e.setDate(e.getDate() - i);
-          if (d.toDateString() === e.toDateString()) s++; else break;
-        }
-        setStreak(s);
         const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
         if (recent.length > 0) setRecentAvg(recent.reduce((a, b) => a + b, 0) / recent.length);
       }
     });
   }, []));
+
+  const hasHistory = bestScore != null;
+  const sub = subPrompt(streak);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -99,25 +120,17 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {streak > 1 && (
-          <Text style={[styles.streak, { fontSize: ms(13) }]}>
-            🔥
-            {streak}
-            {' '}
-            jours de suite
-          </Text>
-        )}
+        <StreakCard streak={streak} />
 
-        <TouchableOpacity
-          style={[styles.goBtn, {
-            width: scale(110),
-            height: scale(110),
-            borderRadius: scale(55),
-          }]}
+        <PlayButton
+          pulsing={!streak.doneToday}
           onPress={() => navigation.navigate('Challenge')}
-        >
-          <Text style={styles.goBtnIcon}> ▶</Text>
-        </TouchableOpacity>
+        />
+
+        <Text style={[styles.prompt, { fontSize: ms(14) }, streak.doneToday && styles.promptDone]}>
+          {prompt(streak, hasHistory)}
+        </Text>
+        {sub && <Text style={[styles.subPrompt, { fontSize: ms(11) }]}>{sub}</Text>}
       </View>
 
       <View style={styles.bottom}>
@@ -151,7 +164,6 @@ const styles = StyleSheet.create({
     color: ACCENT,
     letterSpacing: 4,
   },
-  streak: { color: ACCENT },
   center: {
     flex: 1,
     alignItems: 'center',
@@ -159,7 +171,7 @@ const styles = StyleSheet.create({
   },
   scoresRow: {
     flexDirection: 'row',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   scoreBox: {
     alignItems: 'center',
@@ -183,16 +195,16 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 4,
   },
-  goBtn: {
-    backgroundColor: ACCENT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: `0 4px 12px rgba(${ACCENT_RGB},0.4)`,
-    elevation: 8,
+  prompt: {
+    color: ACCENT,
+    marginTop: 20,
+    letterSpacing: 1,
+    textAlign: 'center',
   },
-  goBtnIcon: {
-    fontSize: ms(36),
-    lineHeight: scale(110),
+  promptDone: { color: '#4caf50' },
+  subPrompt: {
+    color: '#666',
+    marginTop: 6,
     textAlign: 'center',
   },
   bottom: {
