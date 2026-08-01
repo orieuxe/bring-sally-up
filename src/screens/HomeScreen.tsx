@@ -11,35 +11,65 @@ import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory } from '../storage';
 import type { RootStackParamList, Attempt } from '../types';
-import { scoreColor, ACCENT, ACCENT_RGB } from '../utils/color';
+import { scoreColor, ACCENT } from '../utils/color';
+import { COLORS } from '../theme';
 import { formatTime } from '../utils/time';
+import { computeStreak } from '../utils/streak';
+import type { StreakInfo } from '../utils/streak';
+import StatCard from '../components/home/StatCard';
+import PlayButton from '../components/home/PlayButton';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
+
+const EMPTY_STREAK: StreakInfo = {
+  current: 0,
+  best: 0,
+  bestEnd: null,
+  doneToday: false,
+};
+
+// Stored dates are UTC day keys — format them as such so the day never shifts.
+function formatDate(key: string): string {
+  const d = new Date(key);
+  const text = d.toLocaleDateString('fr', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+  // Only the 1st takes an ordinal suffix in French.
+  return `le ${d.getUTCDate() === 1 ? text.replace('1 ', '1er ') : text}`;
+}
+
+// What the play button says. Nudges while the day is open, congratulates once done.
+function prompt(streak: StreakInfo, hasHistory: boolean): string {
+  if (streak.doneToday) return 'séance du jour validée';
+  if (streak.current === 0) return hasHistory ? 'relance ta série' : 'première séance';
+  if (streak.current + 1 > streak.best) return `${streak.current + 1} jours = nouveau record`;
+  return `ne casse pas ta série de ${streak.current} jours`;
+}
 
 export default function HomeScreen({ navigation }: Props) {
   const [lastScore, setLastScore] = useState<Attempt | null>(null);
   const [bestScore, setBestScore] = useState<Attempt | null>(null);
-  const [streak, setStreak] = useState(0);
+  const [streak, setStreak] = useState<StreakInfo>(EMPTY_STREAK);
   const [recentAvg, setRecentAvg] = useState(0);
 
   useFocusEffect(useCallback(() => {
     getHistory().then(h => {
-      if (h.length > 0) {
-        setLastScore(h[0]);
-        setBestScore(h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0]));
-        let s = 0;
-        const today = new Date();
-        for (let i = 0; i < h.length; i++) {
-          const d = new Date(h[i].date);
-          const e = new Date(today); e.setDate(e.getDate() - i);
-          if (d.toDateString() === e.toDateString()) s++; else break;
-        }
-        setStreak(s);
-        const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
-        if (recent.length > 0) setRecentAvg(recent.reduce((a, b) => a + b, 0) / recent.length);
-      }
+      setStreak(computeStreak(h));
+      setLastScore(h[0] ?? null);
+      setBestScore(
+        h.length > 0
+          ? h.reduce((max, a) => (a.duration ?? 0) > (max.duration ?? 0) ? a : max, h[0])
+          : null,
+      );
+      const recent = h.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
+      setRecentAvg(recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0);
     });
   }, []));
+
+  const hasHistory = lastScore != null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -52,72 +82,36 @@ export default function HomeScreen({ navigation }: Props) {
           BRING SALLY UP
         </Text>
 
-        <View style={[styles.scoresRow, { gap: scale(32) }]}>
-          <View style={[styles.scoreBox, {
-            paddingHorizontal: scale(24),
-            paddingVertical: scale(16),
-            borderRadius: scale(16),
-          }]}
-          >
-            <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>record</Text>
-            <Text style={[styles.scoreValue, { fontSize: ms(42) }]}>
-              {bestScore?.duration != null ? formatTime(bestScore.duration) : '--:--'}
-            </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
-              {bestScore?.date
-                ? new Date(bestScore.date).toLocaleDateString('fr', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : ''}
-            </Text>
+        {/* Nothing to show before the first session — straight to the button. */}
+        {hasHistory && (
+          <View style={[styles.cards, { gap: scale(16) }]}>
+            <StatCard
+              label="temps"
+              value={lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
+              valueColor={lastScore?.duration != null
+                ? scoreColor(lastScore.duration, recentAvg)
+                : COLORS.text}
+              record={bestScore?.duration != null ? formatTime(bestScore.duration) : undefined}
+              recordDate={bestScore?.duration != null ? formatDate(bestScore.date) : undefined}
+            />
+            <StatCard
+              label="série"
+              value={String(streak.current)}
+              valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
+              record={streak.best > 0 ? `${streak.best} j` : undefined}
+              recordDate={streak.bestEnd ? formatDate(streak.bestEnd) : undefined}
+            />
           </View>
-          <View style={[styles.scoreBox, {
-            paddingHorizontal: scale(24),
-            paddingVertical: scale(16),
-            borderRadius: scale(16),
-          }]}
-          >
-            <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>dernier</Text>
-            <Text style={[styles.scoreValue, {
-              fontSize: ms(42),
-              color: lastScore?.duration != null ? scoreColor(lastScore.duration, recentAvg) : '#fff',
-            }]}
-            >
-              {lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
-            </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
-              {lastScore?.date
-                ? new Date(lastScore.date).toLocaleDateString('fr', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : ''}
-            </Text>
-          </View>
-        </View>
-
-        {streak > 1 && (
-          <Text style={[styles.streak, { fontSize: ms(13) }]}>
-            🔥
-            {streak}
-            {' '}
-            jours de suite
-          </Text>
         )}
 
-        <TouchableOpacity
-          style={[styles.goBtn, {
-            width: scale(110),
-            height: scale(110),
-            borderRadius: scale(55),
-          }]}
+        <PlayButton
+          pulsing={!streak.doneToday}
           onPress={() => navigation.navigate('Challenge')}
-        >
-          <Text style={styles.goBtnIcon}> ▶</Text>
-        </TouchableOpacity>
+        />
+
+        <Text style={[styles.prompt, { fontSize: ms(14) }, streak.doneToday && styles.promptDone]}>
+          {prompt(streak, hasHistory)}
+        </Text>
       </View>
 
       <View style={styles.bottom}>
@@ -151,50 +145,23 @@ const styles = StyleSheet.create({
     color: ACCENT,
     letterSpacing: 4,
   },
-  streak: { color: ACCENT },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scoresRow: {
+  cards: {
     flexDirection: 'row',
-    marginBottom: 32,
+    alignSelf: 'stretch',
+    marginBottom: 36,
   },
-  scoreBox: {
-    alignItems: 'center',
-    backgroundColor: '#1c1c22',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-    elevation: 4,
-  },
-  scoreLabel: {
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: 4,
-  },
-  scoreValue: {
-    fontWeight: '300',
-    color: '#fff',
-    letterSpacing: 2,
-    fontVariant: ['tabular-nums'],
-  },
-  scoreDate: {
-    color: '#555',
-    marginTop: 4,
-  },
-  goBtn: {
-    backgroundColor: ACCENT,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: `0 4px 12px rgba(${ACCENT_RGB},0.4)`,
-    elevation: 8,
-  },
-  goBtnIcon: {
-    fontSize: ms(36),
-    lineHeight: scale(110),
+  prompt: {
+    color: ACCENT,
+    marginTop: 20,
+    letterSpacing: 1,
     textAlign: 'center',
   },
+  promptDone: { color: COLORS.good },
   bottom: {
     flexDirection: 'row',
     justifyContent: 'center',

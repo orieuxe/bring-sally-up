@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
 import { COLORS } from '../../theme';
 import { ACCENT } from '../../utils/color';
@@ -17,23 +23,16 @@ type Props = {
 // Sticky bottom bar (thumb zone) with rare actions folded behind ⋯
 export default function FilterBar({ range, labelFor, onRange, actions, bottomInset = 0 }: Props) {
   const [open, setOpen] = useState(false);
+  // Measured so the sheet always clears the bar, whatever the safe-area inset adds.
+  const [barHeight, setBarHeight] = useState(0);
 
   return (
     <>
-      {open && (
-        <View style={styles.sheet}>
-          {actions.map(([label, action]) => (
-            <TouchableOpacity
-              key={label}
-              style={styles.action}
-              onPress={() => { setOpen(false); action(); }}
-            >
-              <Text style={[styles.actionText, { fontSize: ms(12) }]}>{label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-      <View style={[styles.bar, { paddingBottom: 6 + bottomInset }]}>
+      {open && <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />}
+      <View
+        style={[styles.bar, { paddingBottom: 6 + bottomInset }]}
+        onLayout={e => setBarHeight(e.nativeEvent.layout.height)}
+      >
         {RANGES.map(r => (
           <TouchableOpacity
             key={r}
@@ -55,6 +54,20 @@ export default function FilterBar({ range, labelFor, onRange, actions, bottomIns
           <Text style={styles.moreText}>⋯</Text>
         </TouchableOpacity>
       </View>
+      {/* After the bar so it paints above it — the last action used to sit under it. */}
+      {open && (
+        <View style={[styles.sheet, { bottom: barHeight + 8 }]}>
+          {actions.map(([label, action]) => (
+            <TouchableOpacity
+              key={label}
+              style={styles.action}
+              onPress={() => { setOpen(false); action(); }}
+            >
+              <Text style={[styles.actionText, { fontSize: ms(12) }]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </>
   );
 }
@@ -98,10 +111,16 @@ const styles = StyleSheet.create({
     color: COLORS.muted,
     fontWeight: '700',
   },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
   sheet: {
     position: 'absolute',
     right: 12,
-    bottom: scale(58),
     backgroundColor: COLORS.cardRaised,
     borderRadius: 12,
     paddingVertical: 4,
