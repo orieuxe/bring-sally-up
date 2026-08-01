@@ -17,21 +17,12 @@ function shiftKey(key: string, days: number): string {
   return keyOf(d);
 }
 
-export interface StreakDay {
-  key: string;
-  label: string;
-  done: boolean;
-  today: boolean;
-}
-
 export interface StreakInfo {
   /** Days in a row up to today — kept alive until today is over. */
   current: number;
   /** Longest run ever, all history. */
   best: number;
   doneToday: boolean;
-  /** Last 7 days, oldest first. */
-  week: StreakDay[];
 }
 
 export function computeStreak(history: Attempt[], now: Date = new Date()): StreakInfo {
@@ -60,24 +51,9 @@ export function computeStreak(history: Attempt[], now: Date = new Date()): Strea
     if (run > best) best = run;
   }
 
-  const week: StreakDay[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const key = shiftKey(today, -i);
-    week.push({
-      key,
-      label: parseKey(key).toLocaleDateString('fr', {
-        weekday: 'narrow',
-        timeZone: 'UTC',
-      }),
-      done: done.has(key),
-      today: i === 0,
-    });
-  }
-
   return {
     current,
     best,
     doneToday,
-    week,
   };
 }

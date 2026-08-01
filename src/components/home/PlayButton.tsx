@@ -114,8 +114,8 @@ export default function PlayButton({ onPress, pulsing }: Props) {
     >
       {pulsing && (
         <>
-          <Animated.View pointerEvents="none" style={[styles.halo, halo(ringA)]} />
-          <Animated.View pointerEvents="none" style={[styles.halo, halo(ringB)]} />
+          <Animated.View style={[styles.halo, halo(ringA)]} />
+          <Animated.View style={[styles.halo, halo(ringB)]} />
         </>
       )}
       <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   halo: {
     position: 'absolute',
     backgroundColor: ACCENT,
+    pointerEvents: 'none',
   },
   btn: {
     backgroundColor: ACCENT,

@@ -12,10 +12,11 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import { getHistory } from '../storage';
 import type { RootStackParamList, Attempt } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
+import { COLORS } from '../theme';
 import { formatTime } from '../utils/time';
 import { computeStreak } from '../utils/streak';
 import type { StreakInfo } from '../utils/streak';
-import StreakCard from '../components/home/StreakCard';
+import StatCard from '../components/home/StatCard';
 import PlayButton from '../components/home/PlayButton';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'Home'> };
@@ -24,7 +25,6 @@ const EMPTY_STREAK: StreakInfo = {
   current: 0,
   best: 0,
   doneToday: false,
-  week: [],
 };
 
 // What the play button says. Nudges while the day is open, congratulates once done.
@@ -33,12 +33,6 @@ function prompt(streak: StreakInfo, hasHistory: boolean): string {
   if (streak.current === 0) return hasHistory ? 'relance ta série' : 'première séance';
   if (streak.current + 1 > streak.best) return `${streak.current + 1} jours = nouveau record`;
   return `ne casse pas ta série de ${streak.current} jours`;
-}
-
-function subPrompt(streak: StreakInfo): string | null {
-  if (streak.doneToday) return 'encore une pour améliorer le temps ?';
-  if (streak.current > 0) return 'plus qu\'aujourd\'hui à tenir';
-  return null;
 }
 
 export default function HomeScreen({ navigation }: Props) {
@@ -60,7 +54,6 @@ export default function HomeScreen({ navigation }: Props) {
   }, []));
 
   const hasHistory = bestScore != null;
-  const sub = subPrompt(streak);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -73,54 +66,23 @@ export default function HomeScreen({ navigation }: Props) {
           BRING SALLY UP
         </Text>
 
-        <View style={[styles.scoresRow, { gap: scale(32) }]}>
-          <View style={[styles.scoreBox, {
-            paddingHorizontal: scale(24),
-            paddingVertical: scale(16),
-            borderRadius: scale(16),
-          }]}
-          >
-            <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>record</Text>
-            <Text style={[styles.scoreValue, { fontSize: ms(42) }]}>
-              {bestScore?.duration != null ? formatTime(bestScore.duration) : '--:--'}
-            </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
-              {bestScore?.date
-                ? new Date(bestScore.date).toLocaleDateString('fr', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : ''}
-            </Text>
-          </View>
-          <View style={[styles.scoreBox, {
-            paddingHorizontal: scale(24),
-            paddingVertical: scale(16),
-            borderRadius: scale(16),
-          }]}
-          >
-            <Text style={[styles.scoreLabel, { fontSize: ms(11) }]}>dernier</Text>
-            <Text style={[styles.scoreValue, {
-              fontSize: ms(42),
-              color: lastScore?.duration != null ? scoreColor(lastScore.duration, recentAvg) : '#fff',
-            }]}
-            >
-              {lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
-            </Text>
-            <Text style={[styles.scoreDate, { fontSize: ms(12) }]}>
-              {lastScore?.date
-                ? new Date(lastScore.date).toLocaleDateString('fr', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })
-                : ''}
-            </Text>
-          </View>
+        <View style={[styles.cards, { gap: scale(16) }]}>
+          <StatCard
+            label="temps"
+            value={lastScore?.duration != null ? formatTime(lastScore.duration) : '--:--'}
+            valueColor={lastScore?.duration != null
+              ? scoreColor(lastScore.duration, recentAvg)
+              : COLORS.text}
+            record={bestScore?.duration != null ? formatTime(bestScore.duration) : undefined}
+          />
+          <StatCard
+            label="série"
+            value={String(streak.current)}
+            valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
+            icon={streak.current > 0 ? '🔥' : undefined}
+            record={streak.best > 0 ? `${streak.best} j` : undefined}
+          />
         </View>
-
-        <StreakCard streak={streak} />
 
         <PlayButton
           pulsing={!streak.doneToday}
@@ -130,7 +92,6 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={[styles.prompt, { fontSize: ms(14) }, streak.doneToday && styles.promptDone]}>
           {prompt(streak, hasHistory)}
         </Text>
-        {sub && <Text style={[styles.subPrompt, { fontSize: ms(11) }]}>{sub}</Text>}
       </View>
 
       <View style={styles.bottom}>
@@ -169,31 +130,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scoresRow: {
+  cards: {
     flexDirection: 'row',
-    marginBottom: 24,
-  },
-  scoreBox: {
-    alignItems: 'center',
-    backgroundColor: '#1c1c22',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-    elevation: 4,
-  },
-  scoreLabel: {
-    color: '#666',
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: 4,
-  },
-  scoreValue: {
-    fontWeight: '300',
-    color: '#fff',
-    letterSpacing: 2,
-    fontVariant: ['tabular-nums'],
-  },
-  scoreDate: {
-    color: '#555',
-    marginTop: 4,
+    alignSelf: 'stretch',
+    marginBottom: 36,
   },
   prompt: {
     color: ACCENT,
@@ -201,12 +141,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center',
   },
-  promptDone: { color: '#4caf50' },
-  subPrompt: {
-    color: '#666',
-    marginTop: 6,
-    textAlign: 'center',
-  },
+  promptDone: { color: COLORS.good },
   bottom: {
     flexDirection: 'row',
     justifyContent: 'center',

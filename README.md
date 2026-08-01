@@ -29,7 +29,7 @@ src/
 ├── data/cues.ts           # Calibrated cue timestamps
 ├── screens/               # Home, Challenge (player), History, Import, Calibrate
 ├── components/
-│   ├── home/              # Streak card, animated play button
+│   ├── home/              # Stat card, animated play button
 │   └── history/           # History building blocks (calendar, chart, tables, filter bar)
 ├── utils/                 # Score color gradient, time formatting, stats helpers
 ├── theme.ts               # Shared color tokens
@@ -39,7 +39,7 @@ src/
 
 ## Features
 
-- **Home**: streak counter (current + all-time best) with the last 7 days as dots, and a play button that pulses with a nudge until today's session is done.
+- **Home**: two stat cards — best time under the last time, best streak under the current one — and a play button that pulses with a nudge until today's session is done.
 - **Player**: progress ring colored by score, UP/DOWN cue badges, tap to give up, ± time adjust before save. One entry per day (keeps the best).
 - **History**: swipeable calendar heatmap, trend chart, weekday and time-of-day stats tables, period summary. Sticky bottom filter bar (month / 6M / 1Y / all) driving the whole screen.
 - **Record**: all-time best marked with a ★ across calendar, chart and tooltip.
