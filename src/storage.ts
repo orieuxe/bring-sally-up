@@ -8,13 +8,6 @@ export async function getHistory(): Promise<Attempt[]> {
   return raw ? JSON.parse(raw) : [];
 }
 
-export async function saveAttempt(attempt: Attempt): Promise<Attempt[]> {
-  const history = await getHistory();
-  history.push(attempt);
-  await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  return history;
-}
-
 // One entry per day: replaces the day's entry only when the new time beats it.
 // When rejected, returns the better duration already stored for that day.
 export async function saveDailyBest(

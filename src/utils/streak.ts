@@ -1,20 +1,10 @@
 import type { Attempt } from '../types';
-
-// Attempts are stored with a UTC `YYYY-MM-DD` key (see ChallengeScreen), so all
-// day arithmetic here stays in UTC to compare like with like.
-function keyOf(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function parseKey(key: string): Date {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d));
-}
+import { dayKey, parseDayKey } from './time';
 
 function shiftKey(key: string, days: number): string {
-  const d = parseKey(key);
-  d.setUTCDate(d.getUTCDate() + days);
-  return keyOf(d);
+  const d = parseDayKey(key);
+  d.setDate(d.getDate() + days);
+  return dayKey(d);
 }
 
 export interface StreakInfo {
@@ -33,7 +23,7 @@ export function computeStreak(history: Attempt[], now: Date = new Date()): Strea
     if ((a.duration ?? 0) > 0) done.add(a.date.slice(0, 10));
   }
 
-  const today = keyOf(now);
+  const today = dayKey(now);
   const doneToday = done.has(today);
 
   // Today still counts as "in progress": start yesterday when it isn't done yet,

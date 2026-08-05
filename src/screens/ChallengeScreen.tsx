@@ -15,7 +15,7 @@ import { getHistory, saveDailyBest } from '../storage';
 import { getChallengePlayer, startChallengeAudio, stopChallengeAudio } from '../challengeAudio';
 import type { Attempt, Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
-import { formatTime } from '../utils/time';
+import { dayKey, formatTime } from '../utils/time';
 import { COLORS } from '../theme';
 
 type Props = {
@@ -27,20 +27,20 @@ type Phase = 'running' | 'finished';
 const TIMER_OFFSET = 6;
 const CUE_DELAY = -0.25;
 
-// Stored day keys are UTC, so the day never shifts under the user.
-const todayKey = () => new Date().toISOString().split('T')[0];
-
 export default function ChallengeScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<Phase>('running');
   const [elapsed, setElapsed] = useState(0);
   const [currentCue, setCurrentCue] = useState<Cue | null>(null);
   const [cueIndex, setCueIndex] = useState(-1);
-  const [failed, setFailed] = useState(false);
   const [adjustedTime, setAdjustedTime] = useState(0);
   const [saveMsg, setSaveMsg] = useState('');
   const [history, setHistory] = useState<Attempt[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  // When the challenge started, not when it was saved: a session begun at 23:59
+  // belongs to that evening, even though it is saved a few minutes into the
+  // next day — otherwise it would break the very streak it was run to keep.
+  const startedAtRef = useRef<Date | null>(null);
   const cueIndexRef = useRef(-1);
 
   useEffect(() => { getHistory().then(setHistory); }, []);
@@ -107,10 +107,10 @@ export default function ChallengeScreen({ navigation }: Props) {
     setElapsed(0);
     setCueIndex(-1);
     setCurrentCue(null);
-    setFailed(false);
     cueIndexRef.current = -1;
 
     await playMusic();
+    startedAtRef.current = new Date();
     startTimeRef.current = Date.now();
 
     timerRef.current = setInterval(() => {
@@ -133,15 +133,19 @@ export default function ChallengeScreen({ navigation }: Props) {
     }, 100);
   };
 
+  // Reads the clock rather than `elapsed`: when the song ends on its own this
+  // runs from the interval closure created at start-up, where that state is
+  // still 0 — which used to offer a completed session as 0:00.
   const finishChallenge = async () => {
-    setAdjustedTime(Math.max(0, Math.floor(elapsed - TIMER_OFFSET)));
+    const started = startTimeRef.current ?? Date.now();
+    setAdjustedTime(Math.max(0, Math.floor((Date.now() - started) / 1000 - TIMER_OFFSET)));
     setPhase('finished');
     // Re-read: the day's entry may have been saved by an earlier run.
     setHistory(await getHistory());
   };
 
   const todayBest = useMemo(
-    () => history.find(a => a.date === todayKey())?.duration ?? 0,
+    () => history.find(a => a.date === dayKey(startedAtRef.current ?? new Date()))?.duration ?? 0,
     [history],
   );
 
@@ -166,19 +170,19 @@ export default function ChallengeScreen({ navigation }: Props) {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     stopChallengeAudio();
-    setFailed(true);
     finishChallenge();
   };
 
   const saveScore = async () => {
     const score = cueIndexRef.current + 1;
+    const startedAt = startedAtRef.current ?? new Date();
     const result = await saveDailyBest({
-      date: todayKey(),
+      date: dayKey(startedAt),
       cuesCompleted: score,
       totalCues: CUES.length,
       completed: score >= CUES.length,
       duration: adjustedTime,
-      hour: new Date().getHours(),
+      hour: startedAt.getHours(),
     });
     if (!result.saved) {
       setSaveMsg(`Déjà fait mieux aujourd'hui : ${formatTime(result.existing ?? 0)}`);
@@ -336,7 +340,7 @@ export default function ChallengeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#16161a',
+    backgroundColor: COLORS.bg,
   },
   center: {
     flex: 1,
@@ -355,7 +359,7 @@ const styles = StyleSheet.create({
   },
   bigTimer: {
     fontWeight: '300',
-    color: '#fff',
+    color: COLORS.text,
     fontVariant: ['tabular-nums'],
     letterSpacing: 2,
   },
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
   cueBadgeText: {
     fontSize: ms(18),
     fontWeight: '800',
-    color: '#fff',
+    color: COLORS.text,
     letterSpacing: 3,
   },
   giveUpHint: {
@@ -413,10 +417,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 2,
     fontVariant: ['tabular-nums'],
-  },
-  resultDetail: {
-    color: COLORS.greyDim,
-    marginBottom: scale(8),
   },
   adjustRow: {
     flexDirection: 'row',
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   },
   saveMsg: {
     fontSize: ms(12),
-    color: '#e25a5a',
+    color: COLORS.bad,
     marginBottom: scale(16),
   },
   saveBtn: {
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: ms(18),
     fontWeight: '700',
-    color: '#16161a',
+    color: COLORS.bg,
   },
   ignoreBtn: { padding: scale(12) },
   ignoreBtnText: {

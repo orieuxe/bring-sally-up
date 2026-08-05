@@ -16,7 +16,7 @@ import { getHistory, clearHistory, deleteAttempt } from '../storage';
 import type { Attempt, RootStackParamList } from '../types';
 import { scoreColor } from '../utils/color';
 import { COLORS } from '../theme';
-import { formatTime } from '../utils/time';
+import { formatDayFr, formatTime, parseDayKey } from '../utils/time';
 import { exportHistory } from '../utils/export';
 import {
   buildMonths,
@@ -79,7 +79,7 @@ export default function HistoryScreen({ navigation }: Props) {
       .map(a => ({
         date: a.date,
         time: a.duration ?? 0,
-        ts: new Date(a.date).getTime(),
+        ts: parseDayKey(a.date).getTime(),
       }))
       .sort((a, b) => a.ts - b.ts);
   }, [filtered]);
@@ -134,16 +134,10 @@ export default function HistoryScreen({ navigation }: Props) {
   const getHeatColor = (score: number) => scoreColor(score, stats.avg);
 
   // Label of the session the tooltip is on, shown in the delete dialog.
-  const shownDayLabel = useMemo(() => {
-    if (!shownDay) return null;
-    const date = new Date(shownDay.date).toLocaleDateString('fr', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      timeZone: 'UTC',
-    });
-    return `${date} · ${formatTime(shownDay.duration)}`;
-  }, [shownDay]);
+  const shownDayLabel = useMemo(
+    () => (shownDay ? `${formatDayFr(shownDay.date)} · ${formatTime(shownDay.duration)}` : null),
+    [shownDay],
+  );
 
   // One entry, and the sheet already named it — no second confirmation.
   const handleDeleteDay = async () => {
@@ -186,11 +180,20 @@ export default function HistoryScreen({ navigation }: Props) {
     if (!ok && Platform.OS === 'web') window.alert('Rien à exporter.');
   };
 
+  // Reachable by wiping the history from this very screen — it needs its own
+  // way back, there is no bar left to navigate from.
   if (history.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>Aucun score</Text>
-        <Text style={styles.emptySub}>Lance ton premier challenge</Text>
+      <View style={[styles.emptyScreen, { paddingTop: insets.top + 4 }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>Aucun score</Text>
+          <Text style={styles.emptySub}>Lance ton premier challenge</Text>
+        </View>
       </View>
     );
   }
@@ -292,9 +295,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
-  empty: {
+  emptyScreen: {
     flex: 1,
     backgroundColor: COLORS.bg,
+  },
+  empty: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

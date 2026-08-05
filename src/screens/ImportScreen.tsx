@@ -132,7 +132,7 @@ export default function ImportScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#16161a',
+    backgroundColor: COLORS.bg,
   },
   content: { padding: 20 },
   header: { marginBottom: 12 },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#fff',
+    color: COLORS.text,
     marginBottom: 12,
   },
   help: {
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: COLORS.emptyCell,
     color: COLORS.grey,
     borderRadius: 10,
     padding: 16,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0d0d0d',
+    color: COLORS.bgDeep,
   },
   buttonDisabled: { opacity: 0.4 },
 });

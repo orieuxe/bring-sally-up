@@ -1,3 +1,5 @@
+import { COLORS } from '../theme';
+
 export const ACCENT = '#b76d0c';
 export const RECORD_GOLD = '#e89b2e';
 
@@ -25,7 +27,7 @@ const STOPS = PALETTE.map((h, i) => ({
 const SIMULATED_AVG = 90;
 
 export function scoreColor(score: number, avg: number): string {
-  if (score === 0) return '#1a1a1a';
+  if (score === 0) return COLORS.emptyCell;
   const ratio = Math.min(score / (avg > 0 ? avg : SIMULATED_AVG), 1.5);
 
   let lo = STOPS[0], hi = STOPS[STOPS.length - 1];

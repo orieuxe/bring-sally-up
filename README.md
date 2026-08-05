@@ -4,7 +4,7 @@ Push-up challenge app synced to "Flower" by Moby. Timer follows the vocal cues "
 
 ## Stack
 
-Expo (React Native) + TypeScript. Local persistence via AsyncStorage — no backend.
+Expo (React Native) + TypeScript. Local persistence via AsyncStorage — no backend. Sessions are keyed by local calendar day (`YYYY-MM-DD`), so a session at 23:59 counts for that day; `utils/time.ts` owns writing and reading those keys.
 
 ## Run
 
@@ -14,7 +14,7 @@ npx expo start --web    # web (dev)
 npx expo start          # mobile (scan Expo Go)
 ```
 
-Requires `assets/sally.mp3` (not included).
+The song lives at `assets/sally.mp3` and is committed with the repo.
 
 ## Build APK
 
@@ -31,7 +31,7 @@ src/
 ├── components/
 │   ├── home/              # Stat card, animated play button
 │   └── history/           # History building blocks (calendar, chart, tables, filter bar, delete sheet)
-├── utils/                 # Score color gradient, time formatting, stats helpers, export
+├── utils/                 # Score color gradient, day keys & time formatting, stats helpers, export
 ├── theme.ts               # Shared color tokens
 ├── storage.ts             # AsyncStorage CRUD
 └── types.ts               # Shared types

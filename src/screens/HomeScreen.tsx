@@ -13,7 +13,7 @@ import { getHistory } from '../storage';
 import type { RootStackParamList, Attempt } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
 import { COLORS } from '../theme';
-import { formatTime } from '../utils/time';
+import { formatDayFr, formatTime } from '../utils/time';
 import { computeStreak } from '../utils/streak';
 import type { StreakInfo } from '../utils/streak';
 import StatCard from '../components/home/StatCard';
@@ -27,19 +27,6 @@ const EMPTY_STREAK: StreakInfo = {
   bestEnd: null,
   doneToday: false,
 };
-
-// Stored dates are UTC day keys — format them as such so the day never shifts.
-function formatDate(key: string): string {
-  const d = new Date(key);
-  const text = d.toLocaleDateString('fr', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-  // Only the 1st takes an ordinal suffix in French.
-  return `le ${d.getUTCDate() === 1 ? text.replace('1 ', '1er ') : text}`;
-}
 
 // What the play button says. Nudges while the day is open, congratulates once
 // done — while still offering to beat the day's time.
@@ -93,14 +80,14 @@ export default function HomeScreen({ navigation }: Props) {
                 ? scoreColor(lastScore.duration, recentAvg)
                 : COLORS.text}
               record={bestScore?.duration != null ? formatTime(bestScore.duration) : undefined}
-              recordDate={bestScore?.duration != null ? formatDate(bestScore.date) : undefined}
+              recordDate={bestScore?.duration != null ? `le ${formatDayFr(bestScore.date)}` : undefined}
             />
             <StatCard
               label="série"
               value={String(streak.current)}
               valueColor={streak.current > 0 ? ACCENT : COLORS.greyDim}
               record={streak.best > 0 ? `${streak.best} j` : undefined}
-              recordDate={streak.bestEnd ? formatDate(streak.bestEnd) : undefined}
+              recordDate={streak.bestEnd ? `le ${formatDayFr(streak.bestEnd)}` : undefined}
             />
           </View>
         )}
@@ -134,7 +121,7 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#16161a',
+    backgroundColor: COLORS.bg,
   },
   scrollContent: {
     flexGrow: 1,
@@ -170,7 +157,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   navBtn: {
-    backgroundColor: '#1c1c22',
+    backgroundColor: COLORS.card,
     boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
     elevation: 2,
   },

@@ -1,4 +1,5 @@
 import type { Attempt } from '../types';
+import { parseDayKey } from './time';
 
 export const RANGES = ['1M', '6M', '1Y', 'ALL'] as const;
 export type Range = (typeof RANGES)[number];
@@ -23,7 +24,7 @@ export function getMonthData(history: Attempt[], year: number, month: number): M
   const firstDow = base.getDay();
   const scores: Record<string, number> = {};
   for (const a of history) {
-    const d = new Date(a.date);
+    const d = parseDayKey(a.date);
     if (d.getFullYear() === year && d.getMonth() === month - 1) {
       scores[a.date] = a.duration ?? 0;
     }
@@ -54,7 +55,7 @@ export function getMonthData(history: Attempt[], year: number, month: number): M
 export function buildMonths(history: Attempt[]): MonthData[] {
   const seen = new Map<string, { year: number; month: number }>();
   for (const a of history) {
-    const d = new Date(a.date);
+    const d = parseDayKey(a.date);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     if (!seen.has(key)) seen.set(key, { year: d.getFullYear(), month: d.getMonth() + 1 });
   }
@@ -72,9 +73,10 @@ export function filterByRange(
   const now = new Date();
   if (range === '1M') {
     const base = new Date(targetMonth.year, targetMonth.month - 1, 1);
-    const end = new Date(targetMonth.year, targetMonth.month, 0);
+    // End of day, so the last day of the month is inside the range.
+    const end = new Date(targetMonth.year, targetMonth.month, 0, 23, 59, 59, 999);
     return history.filter(a => {
-      const d = new Date(a.date);
+      const d = parseDayKey(a.date);
       return d >= base && d <= end;
     });
   }
@@ -84,7 +86,7 @@ export function filterByRange(
     'ALL': new Date(0),
   };
   const limit = limits[range];
-  return history.filter(a => new Date(a.date) >= limit);
+  return history.filter(a => parseDayKey(a.date) >= limit);
 }
 
 export interface PeriodStats {
@@ -185,9 +187,9 @@ export function computeWeekdayStats(attempts: Attempt[]): WeekdayRow[] {
       missPercent: 0,
     }));
   }
-  const dates = attempts.map(a => a.date);
-  const minDate = new Date(Math.min(...dates.map(d => new Date(d).getTime())));
-  const maxDate = new Date(Math.max(...dates.map(d => new Date(d).getTime())));
+  const times = attempts.map(a => parseDayKey(a.date).getTime());
+  const minDate = new Date(Math.min(...times));
+  const maxDate = new Date(Math.max(...times));
   // Total occurrences of each weekday in the range (monday-first indexing)
   const total = Array(7).fill(0);
   const cur = new Date(minDate);
@@ -198,7 +200,7 @@ export function computeWeekdayStats(attempts: Attempt[]): WeekdayRow[] {
   const sum = Array(7).fill(0);
   const done = Array(7).fill(0);
   for (const a of attempts) {
-    const day = (new Date(a.date).getDay() + 6) % 7;
+    const day = (parseDayKey(a.date).getDay() + 6) % 7;
     sum[day] += a.duration ?? 0;
     done[day]++;
   }
