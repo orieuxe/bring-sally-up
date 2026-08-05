@@ -145,7 +145,7 @@ export default function HistoryScreen({ navigation }: Props) {
     return `${date} · ${formatTime(shownDay.duration)}`;
   }, [shownDay]);
 
-  // The sheet's red button is the confirmation — no second popup on top.
+  // One entry, and the sheet already named it — no second confirmation.
   const handleDeleteDay = async () => {
     const day = shownDay;
     setDeleting(false);
@@ -154,11 +154,31 @@ export default function HistoryScreen({ navigation }: Props) {
     setSelectedDay(null);
   };
 
-  const handleDeleteAll = async () => {
+  // Wiping everything keeps its own confirmation on top of the sheet.
+  const handleDeleteAll = () => {
     setDeleting(false);
-    await clearHistory();
-    setHistory([]);
-    setSelectedDay(null);
+    const doClear = async () => {
+      await clearHistory();
+      setHistory([]);
+      setSelectedDay(null);
+    };
+    const message = 'Toutes les séances seront perdues.';
+    if (Platform.OS === 'web') {
+      if (window.confirm(message)) doClear();
+    } else {
+      const { Alert } = require('react-native');
+      Alert.alert('Supprimer', message, [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: doClear,
+        },
+      ]);
+    }
   };
 
   const handleExport = async () => {

@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    paddingVertical: 13,
+    paddingVertical: 9,
     borderRadius: 12,
     alignItems: 'center',
     // Raised enough to read as the thing you press, not another row.
