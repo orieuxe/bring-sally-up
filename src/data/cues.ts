@@ -1,9 +1,10 @@
 import { Cue } from '../types';
 
 // Calibrated timestamps for "Flower" by Moby — Bring Sally Up challenge
-// Matches the length of assets/sally.mp3 (211.29s): anything beyond it was
-// counted in silence, since the track had already ended.
-export const SONG_DURATION = 211.3;
+// assets/sally.mp3 is 211.29s long and the last cue lands at 211.0, so the
+// challenge runs 2s past the track: just enough silence to hold that final
+// up. Anything beyond that was silence with nothing left to do.
+export const SONG_DURATION = 213.3;
 
 export const CUES: Cue[] = [
   { time: 8.6, position: 'up' },
