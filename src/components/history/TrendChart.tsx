@@ -104,15 +104,15 @@ export default function TrendChart({
         {gridVals.map(val => (
           <React.Fragment key={val}>
             <Line x1={PAD.l} y1={y(val)} x2={width - PAD.r} y2={y(val)} stroke="#2a2a2a" strokeWidth={0.5} />
-            <SvgText x={PAD.l - 4} y={y(val) + 4} fill={COLORS.muted} fontSize={ms(8, 0.8)} textAnchor="end">
+            <SvgText x={PAD.l - 4} y={y(val) + 4} fill={COLORS.grey} fontSize={ms(8, 0.8)} textAnchor="end">
               {formatTime(val)}
             </SvgText>
           </React.Fragment>
         ))}
-        <SvgText x={PAD.l} y={height - 6} fill={COLORS.muted} fontSize={ms(10, 0.8)} textAnchor="start">
+        <SvgText x={PAD.l} y={height - 6} fill={COLORS.grey} fontSize={ms(10, 0.8)} textAnchor="start">
           {formatAxisDate(data[0].date, showYear)}
         </SvgText>
-        <SvgText x={width - PAD.r} y={height - 6} fill={COLORS.muted} fontSize={ms(10, 0.8)} textAnchor="end">
+        <SvgText x={width - PAD.r} y={height - 6} fill={COLORS.grey} fontSize={ms(10, 0.8)} textAnchor="end">
           {formatAxisDate(data[data.length - 1].date, showYear)}
         </SvgText>
         {/* Average line */}
@@ -121,7 +121,7 @@ export default function TrendChart({
           y1={y(avg)}
           x2={width - PAD.r}
           y2={y(avg)}
-          stroke={COLORS.ghost}
+          stroke={COLORS.greyDim}
           strokeWidth={1}
           strokeDasharray="4,4"
         />

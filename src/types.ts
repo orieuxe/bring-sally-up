@@ -15,7 +15,6 @@ export interface Attempt {
 export type RootStackParamList = {
   Home: undefined;
   Challenge: undefined;
-  Calibrate: undefined;
   History: undefined;
   Import: undefined;
 };

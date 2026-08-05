@@ -55,10 +55,10 @@ export default function TimeSlotTable({ attempts }: Props) {
       {rows.map((d, i) => {
         const doneColor = d.done === bestDone && bestDone > 0
           ? COLORS.good
-          : d.done === worstDone ? COLORS.bad : COLORS.body;
+          : d.done === worstDone ? COLORS.bad : COLORS.grey;
         const avgColor = d.done > 0 && d.avg === bestAvg
           ? COLORS.good
-          : d.done > 0 && d.avg === worstAvg ? COLORS.bad : COLORS.body;
+          : d.done > 0 && d.avg === worstAvg ? COLORS.bad : COLORS.grey;
         return (
           <View key={d.slot} style={[styles.row, i === rows.length - 1 && styles.rowLast]}>
             <Text style={[styles.cell, styles.slotCell, { fontSize: ms(12) }]}>{d.slot}</Text>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   title: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   th: {
     flex: 1,
     textAlign: 'center',
-    color: COLORS.faint,
+    color: COLORS.greyDim,
     fontWeight: '600',
     textTransform: 'uppercase',
   },
@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
   },
   slotCell: {
     fontWeight: '600',
-    color: COLORS.muted,
+    color: COLORS.grey,
   },
   cellNum: {
     flex: 1,
     textAlign: 'center',
-    color: COLORS.body,
+    color: COLORS.grey,
     fontVariant: ['tabular-nums'],
   },
 });

@@ -12,10 +12,12 @@ import { moderateScale as ms } from 'react-native-size-matters';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { getHistory, clearHistory } from '../storage';
+import { getHistory, clearHistory, deleteAttempt } from '../storage';
 import type { Attempt, RootStackParamList } from '../types';
 import { scoreColor } from '../utils/color';
 import { COLORS } from '../theme';
+import { formatTime } from '../utils/time';
+import { exportHistory } from '../utils/export';
 import {
   buildMonths,
   computeStats,
@@ -31,6 +33,7 @@ import TrendChart from '../components/history/TrendChart';
 import WeekdayTable from '../components/history/WeekdayTable';
 import TimeSlotTable from '../components/history/TimeSlotTable';
 import FilterBar from '../components/history/FilterBar';
+import DeleteSheet from '../components/history/DeleteSheet';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'History'> };
 
@@ -42,6 +45,7 @@ export default function HistoryScreen({ navigation }: Props) {
     return { year: now.getFullYear(), month: now.getMonth() + 1 };
   });
   const [selectedDay, setSelectedDay] = useState<DayRef | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -129,27 +133,58 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const getHeatColor = (score: number) => scoreColor(score, stats.avg);
 
-  const handleClear = () => {
-    const doClear = async () => {
-      await clearHistory();
-      setHistory([]);
-    };
+  // Label of the session the tooltip is on, shown in the delete dialog.
+  const shownDayLabel = useMemo(() => {
+    if (!shownDay) return null;
+    const date = new Date(shownDay.date).toLocaleDateString('fr', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'UTC',
+    });
+    return `${date} · ${formatTime(shownDay.duration)}`;
+  }, [shownDay]);
+
+  const confirm = (message: string, onYes: () => void) => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Effacer l\'historique ?')) doClear();
+      if (window.confirm(message)) onYes();
     } else {
       const { Alert } = require('react-native');
-      Alert.alert('Effacer', 'Tous les scores seront supprimés.', [
+      Alert.alert('Supprimer', message, [
         {
           text: 'Annuler',
           style: 'cancel',
         },
         {
-          text: 'Effacer',
+          text: 'Supprimer',
           style: 'destructive',
-          onPress: doClear,
+          onPress: onYes,
         },
       ]);
     }
+  };
+
+  // One entry, and the sheet already named it — no second confirmation.
+  const handleDeleteDay = async () => {
+    const day = shownDay;
+    setDeleting(false);
+    if (!day) return;
+    setHistory(await deleteAttempt(day.date));
+    setSelectedDay(null);
+  };
+
+  const handleDeleteAll = () => {
+    setDeleting(false);
+    confirm('Tous les scores seront supprimés.', async () => {
+      await clearHistory();
+      setHistory([]);
+      setSelectedDay(null);
+    });
+  };
+
+  const handleExport = async () => {
+    const ok = await exportHistory(history);
+    if (!ok && Platform.OS === 'web') window.alert('Rien à exporter.');
   };
 
   if (history.length === 0) {
@@ -223,9 +258,18 @@ export default function HistoryScreen({ navigation }: Props) {
         onRange={setRange}
         bottomInset={insets.bottom}
         actions={[
-          ['effacer', handleClear],
+          ['supprimer', () => setDeleting(true)],
+          ['exporter', handleExport],
           ['importer', () => navigation.navigate('Import')],
         ]}
+      />
+
+      <DeleteSheet
+        visible={deleting}
+        dayLabel={shownDayLabel}
+        onDeleteDay={handleDeleteDay}
+        onDeleteAll={handleDeleteAll}
+        onCancel={() => setDeleting(false)}
       />
     </View>
   );
@@ -244,7 +288,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 4,
   },
-  backLink: { color: '#aaa' },
+  backLink: { color: COLORS.grey },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -258,11 +302,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '300',
-    color: '#666',
+    color: COLORS.grey,
   },
   emptySub: {
     fontSize: 13,
-    color: COLORS.hint,
+    color: COLORS.greyDim,
     marginTop: 4,
   },
 });

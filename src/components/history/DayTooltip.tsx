@@ -87,11 +87,11 @@ const styles = StyleSheet.create({
     borderRadius: scale(4),
   },
   weekday: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     textTransform: 'capitalize',
   },
   dayNum: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontWeight: '500',
   },
   recordVal: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: ms(9),
-    color: COLORS.faint,
+    color: COLORS.greyDim,
     marginTop: 2,
   },
 });

@@ -41,9 +41,10 @@ function formatDate(key: string): string {
   return `le ${d.getUTCDate() === 1 ? text.replace('1 ', '1er ') : text}`;
 }
 
-// What the play button says. Nudges while the day is open, congratulates once done.
+// What the play button says. Nudges while the day is open, congratulates once
+// done — while still offering to beat the day's time.
 function prompt(streak: StreakInfo, hasHistory: boolean): string {
-  if (streak.doneToday) return 'séance du jour validée';
+  if (streak.doneToday) return 'séance du jour validée, l\'améliorer ?';
   if (streak.current === 0) return hasHistory ? 'relance ta série' : 'première séance';
   if (streak.current + 1 > streak.best) return `${streak.current + 1} jours = nouveau record`;
   return `ne casse pas ta série de ${streak.current} jours`;
@@ -97,7 +98,7 @@ export default function HomeScreen({ navigation }: Props) {
             <StatCard
               label="série"
               value={String(streak.current)}
-              valueColor={streak.current > 0 ? ACCENT : COLORS.faint}
+              valueColor={streak.current > 0 ? ACCENT : COLORS.greyDim}
               record={streak.best > 0 ? `${streak.best} j` : undefined}
               recordDate={streak.bestEnd ? formatDate(streak.bestEnd) : undefined}
             />
@@ -165,7 +166,7 @@ const styles = StyleSheet.create({
   bottom: {
     flexDirection: 'row',
     justifyContent: 'center',
-    paddingBottom: 20,
+    paddingBottom: 52,
     paddingTop: 16,
   },
   navBtn: {
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   navBtnText: {
-    color: '#aaa',
+    color: COLORS.grey,
     fontWeight: '500',
     letterSpacing: 1,
   },

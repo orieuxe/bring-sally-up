@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   label: {
-    color: COLORS.hint,
+    color: COLORS.grey,
     textTransform: 'uppercase',
     letterSpacing: 2,
     marginBottom: 4,
@@ -65,13 +65,13 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   record: {
-    color: COLORS.faint,
+    color: COLORS.greyDim,
     marginTop: 4,
     letterSpacing: 1,
   },
   recordDate: {
-    color: COLORS.faint,
-    opacity: 0.7,
+    color: COLORS.greyDim,
+    opacity: 0.85,
     marginTop: 2,
   },
 });

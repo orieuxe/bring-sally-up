@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   },
   btnActive: { backgroundColor: ACCENT },
   btnText: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontWeight: '600',
   },
   btnTextActive: { color: COLORS.bg },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   moreText: {
     fontSize: 16,
     lineHeight: 16,
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontWeight: '700',
   },
   backdrop: {
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionText: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontWeight: '500',
   },
 });

@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrow: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontSize: ms(40),
   },
   page: {
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   monthLabel: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
@@ -157,13 +157,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 1,
   },
-  dow: { color: COLORS.hint },
+  dow: { color: COLORS.greyDim },
   cell: {
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  cellText: { color: COLORS.ghost },
+  cellText: { color: COLORS.greyDim },
   cellTextActive: {
     color: COLORS.text,
     fontWeight: '600',
