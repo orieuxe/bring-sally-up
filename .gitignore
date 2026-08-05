@@ -18,6 +18,9 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
+# Google service account keys — uploaded straight to EAS, never committed
+*service-account*.json
+google-services.json
 
 # Metro
 .metro-health-check*
