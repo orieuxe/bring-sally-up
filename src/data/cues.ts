@@ -1,8 +1,9 @@
 import { Cue } from '../types';
 
 // Calibrated timestamps for "Flower" by Moby — Bring Sally Up challenge
-// Total song duration: ~221 seconds
-export const SONG_DURATION = 221;
+// Matches the length of assets/sally.mp3 (211.29s): anything beyond it was
+// counted in silence, since the track had already ended.
+export const SONG_DURATION = 211.3;
 
 export const CUES: Cue[] = [
   { time: 8.6, position: 'up' },

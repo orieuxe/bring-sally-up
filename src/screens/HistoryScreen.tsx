@@ -50,7 +50,27 @@ export default function HistoryScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
-    useCallback(() => { getHistory().then(setHistory); }, []),
+    useCallback(() => {
+      getHistory().then(h => {
+        setHistory(h);
+        // Open the summary on the month the calendar will land on: this one
+        // when it has sessions, otherwise the most recent one that does —
+        // the two used to disagree after a quiet start of month.
+        setTargetMonth(prev => {
+          const months = h.map(a => parseDayKey(a.date));
+          if (months.length === 0) return prev;
+          const inPrev = months.some(
+            d => d.getFullYear() === prev.year && d.getMonth() + 1 === prev.month,
+          );
+          if (inPrev) return prev;
+          const latest = new Date(Math.max(...months.map(d => d.getTime())));
+          return {
+            year: latest.getFullYear(),
+            month: latest.getMonth() + 1,
+          };
+        });
+      });
+    }, []),
   );
 
   const filtered = useMemo(
