@@ -12,6 +12,7 @@ import {
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { importRecords } from '../storage';
 import { ACCENT } from '../utils/color';
+import { COLORS } from '../theme';
 import type { RootStackParamList, Attempt } from '../types';
 
 type Props = {
@@ -112,7 +113,7 @@ export default function ImportScreen({ navigation }: Props) {
         style={styles.input}
         multiline
         placeholder={`${currentYear}-07-20 1:05\n${currentYear}-07-21 1:08\n${currentYear}-07-22 1:12`}
-        placeholderTextColor="#555"
+        placeholderTextColor={COLORS.greyDim}
         value={text}
         onChangeText={setText}
         textAlignVertical="top"
@@ -131,26 +132,26 @@ export default function ImportScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#16161a',
+    backgroundColor: COLORS.bg,
   },
   content: { padding: 20 },
   header: { marginBottom: 12 },
-  backLink: { color: '#aaa' },
+  backLink: { color: COLORS.grey },
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#fff',
+    color: COLORS.text,
     marginBottom: 12,
   },
   help: {
     fontSize: 13,
-    color: '#888',
+    color: COLORS.grey,
     lineHeight: 20,
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#1a1a1a',
-    color: '#ccc',
+    backgroundColor: COLORS.emptyCell,
+    color: COLORS.grey,
     borderRadius: 10,
     padding: 16,
     fontSize: 14,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0d0d0d',
+    color: COLORS.bgDeep,
   },
   buttonDisabled: { opacity: 0.4 },
 });

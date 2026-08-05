@@ -1,28 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Attempt, Cue } from './types';
+import { Attempt } from './types';
 
 const HISTORY_KEY = '@sally_history';
-const CUES_KEY = '@sally_cues';
 
 export async function getHistory(): Promise<Attempt[]> {
   const raw = await AsyncStorage.getItem(HISTORY_KEY);
   return raw ? JSON.parse(raw) : [];
-}
-
-export async function getCustomCues(): Promise<Cue[] | null> {
-  const raw = await AsyncStorage.getItem(CUES_KEY);
-  return raw ? JSON.parse(raw) : null;
-}
-
-export async function saveCustomCues(cues: Cue[]): Promise<void> {
-  await AsyncStorage.setItem(CUES_KEY, JSON.stringify(cues));
-}
-
-export async function saveAttempt(attempt: Attempt): Promise<Attempt[]> {
-  const history = await getHistory();
-  history.push(attempt);
-  await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  return history;
 }
 
 // One entry per day: replaces the day's entry only when the new time beats it.
@@ -53,6 +36,14 @@ export async function importRecords(records: Attempt[]): Promise<Attempt[]> {
   merged.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
   return merged;
+}
+
+// Drops a single day's entry — the one-session counterpart of clearHistory.
+export async function deleteAttempt(date: string): Promise<Attempt[]> {
+  const history = await getHistory();
+  const next = history.filter(a => a.date !== date);
+  await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+  return next;
 }
 
 export async function clearHistory(): Promise<void> {

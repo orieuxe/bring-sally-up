@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
 import { COLORS } from '../../theme';
 import { RECORD_GOLD } from '../../utils/color';
-import { formatTime } from '../../utils/time';
+import { formatTime, parseDayKey } from '../../utils/time';
 import type { Attempt } from '../../types';
 
 // Fallback reps estimate when the session has no cue count (imports)
@@ -20,7 +20,7 @@ type Props = {
 };
 
 export default function DayTooltip({ day, attempt, avg, isRecord, color }: Props) {
-  const date = new Date(day.date);
+  const date = parseDayKey(day.date);
   const hasRealReps = attempt != null && attempt.cuesCompleted > 0;
   const reps = hasRealReps
     ? String(attempt.cuesCompleted)
@@ -87,11 +87,11 @@ const styles = StyleSheet.create({
     borderRadius: scale(4),
   },
   weekday: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     textTransform: 'capitalize',
   },
   dayNum: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     fontWeight: '500',
   },
   recordVal: {
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: ms(9),
-    color: COLORS.faint,
+    color: COLORS.greyDim,
     marginTop: 2,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -10,12 +10,12 @@ import {
 import { moderateScale as ms, scale } from 'react-native-size-matters';
 import Svg, { Circle } from 'react-native-svg';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { CUES as BUILTIN_CUES, SONG_DURATION as BUILTIN_DURATION } from '../data/cues';
-import { getCustomCues, getHistory, saveDailyBest } from '../storage';
+import { CUES, SONG_DURATION } from '../data/cues';
+import { getHistory, saveDailyBest } from '../storage';
 import { getChallengePlayer, startChallengeAudio, stopChallengeAudio } from '../challengeAudio';
-import type { Cue, RootStackParamList } from '../types';
+import type { Attempt, Cue, RootStackParamList } from '../types';
 import { scoreColor, ACCENT } from '../utils/color';
-import { formatTime } from '../utils/time';
+import { dayKey, formatTime } from '../utils/time';
 import { COLORS } from '../theme';
 
 type Props = {
@@ -32,27 +32,23 @@ export default function ChallengeScreen({ navigation }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [currentCue, setCurrentCue] = useState<Cue | null>(null);
   const [cueIndex, setCueIndex] = useState(-1);
-  const [failed, setFailed] = useState(false);
   const [adjustedTime, setAdjustedTime] = useState(0);
   const [saveMsg, setSaveMsg] = useState('');
-  const [recordMsg, setRecordMsg] = useState('');
-  const [recentAvg, setRecentAvg] = useState(0);
+  const [history, setHistory] = useState<Attempt[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  // When the challenge started, not when it was saved: a session begun at 23:59
+  // belongs to that evening, even though it is saved a few minutes into the
+  // next day — otherwise it would break the very streak it was run to keep.
+  const startedAtRef = useRef<Date | null>(null);
   const cueIndexRef = useRef(-1);
-  const cuesRef = useRef<Cue[]>(BUILTIN_CUES);
-  const songDurationRef = useRef<number>(BUILTIN_DURATION);
 
-  useEffect(() => {
-    Promise.all([getCustomCues(), getHistory()]).then(([custom, history]) => {
-      if (custom && custom.length > 0) {
-        cuesRef.current = custom;
-        songDurationRef.current = custom[custom.length - 1].time + 10;
-      }
-      const recent = history.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
-      if (recent.length > 0) setRecentAvg(recent.reduce((a, b) => a + b, 0) / recent.length);
-    });
-  }, []);
+  useEffect(() => { getHistory().then(setHistory); }, []);
+
+  const recentAvg = useMemo(() => {
+    const recent = history.slice(0, 10).map(a => a.duration ?? 0).filter(t => t > 0);
+    return recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+  }, [history]);
 
   // The app-wide player (see challengeAudio.ts) is already playing muted
   // in a loop by the time this screen is reached in the vast majority of
@@ -111,10 +107,10 @@ export default function ChallengeScreen({ navigation }: Props) {
     setElapsed(0);
     setCueIndex(-1);
     setCurrentCue(null);
-    setFailed(false);
     cueIndexRef.current = -1;
 
     await playMusic();
+    startedAtRef.current = new Date();
     startTimeRef.current = Date.now();
 
     timerRef.current = setInterval(() => {
@@ -122,13 +118,13 @@ export default function ChallengeScreen({ navigation }: Props) {
       const elapsedSec = (now - startTimeRef.current!) / 1000;
       setElapsed(elapsedSec);
       const nextIdx = cueIndexRef.current + 1;
-      if (nextIdx < cuesRef.current.length && elapsedSec >= cuesRef.current[nextIdx].time + CUE_DELAY) {
+      if (nextIdx < CUES.length && elapsedSec >= CUES[nextIdx].time + CUE_DELAY) {
         cueIndexRef.current = nextIdx;
         setCueIndex(nextIdx);
-        setCurrentCue(cuesRef.current[nextIdx]);
+        setCurrentCue(CUES[nextIdx]);
         if (Platform.OS !== 'web') Vibration.vibrate(200);
       }
-      if (elapsedSec >= songDurationRef.current) {
+      if (elapsedSec >= SONG_DURATION) {
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = null;
         stopChallengeAudio();
@@ -137,49 +133,56 @@ export default function ChallengeScreen({ navigation }: Props) {
     }, 100);
   };
 
+  // Reads the clock rather than `elapsed`: when the song ends on its own this
+  // runs from the interval closure created at start-up, where that state is
+  // still 0 — which used to offer a completed session as 0:00.
   const finishChallenge = async () => {
-    const time = Math.max(0, Math.floor(elapsed - TIMER_OFFSET));
-    setAdjustedTime(time);
+    const started = startTimeRef.current ?? Date.now();
+    setAdjustedTime(Math.max(0, Math.floor((Date.now() - started) / 1000 - TIMER_OFFSET)));
     setPhase('finished');
-
-    // Check records
-    const history = await getHistory();
-    if (history.length === 0) {
-      setRecordMsg('Premier score !');
-    } else {
-      const best = Math.max(...history.map(a => a.duration ?? 0));
-      if (time > best) {
-        setRecordMsg('Record absolu !');
-      } else {
-        // Best in last 10 sessions
-        const recent = history.slice(0, 10);
-        const recentBest = Math.max(...recent.map(a => a.duration ?? 0));
-        if (time >= recentBest) {
-          setRecordMsg(`Meilleur temps des 10 dernières séances`);
-        } else {
-          setRecordMsg('');
-        }
-      }
-    }
+    // Re-read: the day's entry may have been saved by an earlier run.
+    setHistory(await getHistory());
   };
+
+  const todayBest = useMemo(
+    () => history.find(a => a.date === dayKey(startedAtRef.current ?? new Date()))?.duration ?? 0,
+    [history],
+  );
+
+  // Derived from the *adjusted* time, so nudging ± keeps the verdict honest.
+  const recordMsg = useMemo(() => {
+    if (phase !== 'finished') return '';
+    if (history.length === 0) return 'Premier score !';
+    const best = Math.max(...history.map(a => a.duration ?? 0));
+    if (adjustedTime > best) return 'Record absolu !';
+    // Second run of the day: the only thing worth saying is whether it beat
+    // the morning's time — anything else would contradict the save.
+    if (todayBest > 0) {
+      return adjustedTime > todayBest
+        ? `Séance du jour améliorée : +${adjustedTime - todayBest}s`
+        : '';
+    }
+    const recentBest = Math.max(...history.slice(0, 10).map(a => a.duration ?? 0));
+    return adjustedTime >= recentBest ? 'Meilleur temps des 10 dernières séances' : '';
+  }, [phase, adjustedTime, history, todayBest]);
 
   const giveUp = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = null;
     stopChallengeAudio();
-    setFailed(true);
     finishChallenge();
   };
 
   const saveScore = async () => {
     const score = cueIndexRef.current + 1;
+    const startedAt = startedAtRef.current ?? new Date();
     const result = await saveDailyBest({
-      date: new Date().toISOString().split('T')[0],
+      date: dayKey(startedAt),
       cuesCompleted: score,
-      totalCues: cuesRef.current.length,
-      completed: score >= cuesRef.current.length,
+      totalCues: CUES.length,
+      completed: score >= CUES.length,
       duration: adjustedTime,
-      hour: new Date().getHours(),
+      hour: startedAt.getHours(),
     });
     if (!result.saved) {
       setSaveMsg(`Déjà fait mieux aujourd'hui : ${formatTime(result.existing ?? 0)}`);
@@ -189,7 +192,7 @@ export default function ChallengeScreen({ navigation }: Props) {
   };
 
   const displayTime = Math.max(0, elapsed - TIMER_OFFSET);
-  const totalDuration = songDurationRef.current - TIMER_OFFSET;
+  const totalDuration = SONG_DURATION - TIMER_OFFSET;
   const progress = Math.min(displayTime / totalDuration, 1);
   const isIntro = elapsed < TIMER_OFFSET;
 
@@ -277,7 +280,7 @@ export default function ChallengeScreen({ navigation }: Props) {
           <Text style={[styles.resultReps]}>
             {cueIndex + 1}
             /
-            {cuesRef.current.length}
+            {CUES.length}
             {' '}
             reps
           </Text>
@@ -337,7 +340,7 @@ export default function ChallengeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#16161a',
+    backgroundColor: COLORS.bg,
   },
   center: {
     flex: 1,
@@ -356,13 +359,13 @@ const styles = StyleSheet.create({
   },
   bigTimer: {
     fontWeight: '300',
-    color: '#fff',
+    color: COLORS.text,
     fontVariant: ['tabular-nums'],
     letterSpacing: 2,
   },
   introCount: {
     fontWeight: '700',
-    color: '#666',
+    color: COLORS.grey,
     fontVariant: ['tabular-nums'],
   },
   cueBadge: {
@@ -396,28 +399,24 @@ const styles = StyleSheet.create({
   cueBadgeText: {
     fontSize: ms(18),
     fontWeight: '800',
-    color: '#fff',
+    color: COLORS.text,
     letterSpacing: 3,
   },
   giveUpHint: {
     fontSize: ms(13),
-    color: COLORS.hint,
+    color: COLORS.greyDim,
   },
   giveUpHintHidden: { opacity: 0 },
   // Finished
   resultReps: {
     fontVariant: ['tabular-nums'],
     fontSize: ms(14),
-    color: '#555',
+    color: COLORS.greyDim,
   },
   resultTime: {
     fontWeight: '600',
     letterSpacing: 2,
     fontVariant: ['tabular-nums'],
-  },
-  resultDetail: {
-    color: '#555',
-    marginBottom: scale(8),
   },
   adjustRow: {
     flexDirection: 'row',
@@ -435,7 +434,7 @@ const styles = StyleSheet.create({
   },
   adjustBtnText: {
     fontSize: ms(24),
-    color: '#aaa',
+    color: COLORS.grey,
     fontWeight: '600',
   },
   recordMsg: {
@@ -446,7 +445,7 @@ const styles = StyleSheet.create({
   },
   saveMsg: {
     fontSize: ms(12),
-    color: '#e25a5a',
+    color: COLORS.bad,
     marginBottom: scale(16),
   },
   saveBtn: {
@@ -459,11 +458,11 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: ms(18),
     fontWeight: '700',
-    color: '#16161a',
+    color: COLORS.bg,
   },
   ignoreBtn: { padding: scale(12) },
   ignoreBtnText: {
     fontSize: ms(13),
-    color: COLORS.hint,
+    color: COLORS.greyDim,
   },
 });

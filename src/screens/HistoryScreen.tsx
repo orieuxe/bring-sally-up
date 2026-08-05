@@ -12,10 +12,12 @@ import { moderateScale as ms } from 'react-native-size-matters';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import { getHistory, clearHistory } from '../storage';
+import { getHistory, clearHistory, deleteAttempt } from '../storage';
 import type { Attempt, RootStackParamList } from '../types';
 import { scoreColor } from '../utils/color';
 import { COLORS } from '../theme';
+import { formatDayFr, formatTime, parseDayKey } from '../utils/time';
+import { exportHistory } from '../utils/export';
 import {
   buildMonths,
   computeStats,
@@ -31,6 +33,7 @@ import TrendChart from '../components/history/TrendChart';
 import WeekdayTable from '../components/history/WeekdayTable';
 import TimeSlotTable from '../components/history/TimeSlotTable';
 import FilterBar from '../components/history/FilterBar';
+import DeleteSheet from '../components/history/DeleteSheet';
 
 type Props = { navigation: StackNavigationProp<RootStackParamList, 'History'> };
 
@@ -42,11 +45,32 @@ export default function HistoryScreen({ navigation }: Props) {
     return { year: now.getFullYear(), month: now.getMonth() + 1 };
   });
   const [selectedDay, setSelectedDay] = useState<DayRef | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   useFocusEffect(
-    useCallback(() => { getHistory().then(setHistory); }, []),
+    useCallback(() => {
+      getHistory().then(h => {
+        setHistory(h);
+        // Open the summary on the month the calendar will land on: this one
+        // when it has sessions, otherwise the most recent one that does —
+        // the two used to disagree after a quiet start of month.
+        setTargetMonth(prev => {
+          const months = h.map(a => parseDayKey(a.date));
+          if (months.length === 0) return prev;
+          const inPrev = months.some(
+            d => d.getFullYear() === prev.year && d.getMonth() + 1 === prev.month,
+          );
+          if (inPrev) return prev;
+          const latest = new Date(Math.max(...months.map(d => d.getTime())));
+          return {
+            year: latest.getFullYear(),
+            month: latest.getMonth() + 1,
+          };
+        });
+      });
+    }, []),
   );
 
   const filtered = useMemo(
@@ -75,7 +99,7 @@ export default function HistoryScreen({ navigation }: Props) {
       .map(a => ({
         date: a.date,
         time: a.duration ?? 0,
-        ts: new Date(a.date).getTime(),
+        ts: parseDayKey(a.date).getTime(),
       }))
       .sort((a, b) => a.ts - b.ts);
   }, [filtered]);
@@ -129,22 +153,41 @@ export default function HistoryScreen({ navigation }: Props) {
 
   const getHeatColor = (score: number) => scoreColor(score, stats.avg);
 
-  const handleClear = () => {
+  // Label of the session the tooltip is on, shown in the delete dialog.
+  const shownDayLabel = useMemo(
+    () => (shownDay ? `${formatDayFr(shownDay.date)} · ${formatTime(shownDay.duration)}` : null),
+    [shownDay],
+  );
+
+  // One entry, and the sheet already named it — no second confirmation.
+  const handleDeleteDay = async () => {
+    const day = shownDay;
+    setDeleting(false);
+    if (!day) return;
+    setHistory(await deleteAttempt(day.date));
+    setSelectedDay(null);
+  };
+
+  // Wiping everything keeps its own confirmation on top of the sheet.
+  const handleDeleteAll = () => {
+    setDeleting(false);
     const doClear = async () => {
       await clearHistory();
       setHistory([]);
+      setSelectedDay(null);
     };
+    const message = 'Toutes les séances seront perdues.';
     if (Platform.OS === 'web') {
-      if (window.confirm('Effacer l\'historique ?')) doClear();
+      if (window.confirm(message)) doClear();
     } else {
       const { Alert } = require('react-native');
-      Alert.alert('Effacer', 'Tous les scores seront supprimés.', [
+      Alert.alert('Supprimer', message, [
         {
           text: 'Annuler',
           style: 'cancel',
         },
         {
-          text: 'Effacer',
+          text: 'Supprimer',
           style: 'destructive',
           onPress: doClear,
         },
@@ -152,11 +195,25 @@ export default function HistoryScreen({ navigation }: Props) {
     }
   };
 
+  const handleExport = async () => {
+    const ok = await exportHistory(history);
+    if (!ok && Platform.OS === 'web') window.alert('Rien à exporter.');
+  };
+
+  // Reachable by wiping the history from this very screen — it needs its own
+  // way back, there is no bar left to navigate from.
   if (history.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Text style={styles.emptyText}>Aucun score</Text>
-        <Text style={styles.emptySub}>Lance ton premier challenge</Text>
+      <View style={[styles.emptyScreen, { paddingTop: insets.top + 4 }]}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={[styles.backLink, { fontSize: ms(13) }]}>← retour</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.empty}>
+          <Text style={styles.emptyText}>Aucun score</Text>
+          <Text style={styles.emptySub}>Lance ton premier challenge</Text>
+        </View>
       </View>
     );
   }
@@ -223,9 +280,18 @@ export default function HistoryScreen({ navigation }: Props) {
         onRange={setRange}
         bottomInset={insets.bottom}
         actions={[
-          ['effacer', handleClear],
+          ['supprimer', () => setDeleting(true)],
+          ['exporter', handleExport],
           ['importer', () => navigation.navigate('Import')],
         ]}
+      />
+
+      <DeleteSheet
+        visible={deleting}
+        dayLabel={shownDayLabel}
+        onDeleteDay={handleDeleteDay}
+        onDeleteAll={handleDeleteAll}
+        onCancel={() => setDeleting(false)}
       />
     </View>
   );
@@ -244,25 +310,28 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 4,
   },
-  backLink: { color: '#aaa' },
+  backLink: { color: COLORS.grey },
   content: {
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
-  empty: {
+  emptyScreen: {
     flex: 1,
     backgroundColor: COLORS.bg,
+  },
+  empty: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyText: {
     fontSize: 18,
     fontWeight: '300',
-    color: '#666',
+    color: COLORS.grey,
   },
   emptySub: {
     fontSize: 13,
-    color: COLORS.hint,
+    color: COLORS.greyDim,
     marginTop: 4,
   },
 });

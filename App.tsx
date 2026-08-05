@@ -6,10 +6,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { warmUpChallengeAudio } from './src/challengeAudio';
 import HomeScreen from './src/screens/HomeScreen';
 import ChallengeScreen from './src/screens/ChallengeScreen';
-import CalibrateScreen from './src/screens/CalibrateScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import ImportScreen from './src/screens/ImportScreen';
 import type { RootStackParamList } from './src/types';
+import { COLORS } from './src/theme';
+import { ACCENT } from './src/utils/color';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -17,12 +18,12 @@ const theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: '#e2b714',
-    background: '#16161a',
-    card: '#16161a',
-    text: '#fff',
-    border: '#1a1a1a',
-    notification: '#e2b714',
+    primary: ACCENT,
+    background: COLORS.bg,
+    card: COLORS.bg,
+    text: COLORS.text,
+    border: COLORS.emptyCell,
+    notification: ACCENT,
   },
 };
 
@@ -37,46 +38,23 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer theme={theme}>
-        <Stack.Navigator
-          screenOptions={{
-            headerStyle: { backgroundColor: '#16213e' },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontSize: 18,
-              color: '#fff',
-            },
-          }}
-        >
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen
             name="Home"
             component={HomeScreen}
-            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="Challenge"
             component={ChallengeScreen}
-            options={{
-              headerShown: false,
-              gestureEnabled: false,
-            }}
+            options={{ gestureEnabled: false }}
           />
           <Stack.Screen
             name="History"
             component={HistoryScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Calibrate"
-            component={CalibrateScreen}
-            options={{
-              headerShown: false,
-              gestureEnabled: false,
-            }}
           />
           <Stack.Screen
             name="Import"
             component={ImportScreen}
-            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>

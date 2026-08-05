@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   periodLabel: {
-    color: COLORS.muted,
+    color: COLORS.grey,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   label: {
-    color: COLORS.faint,
+    color: COLORS.greyDim,
     textTransform: 'uppercase',
     marginTop: 2,
   },
