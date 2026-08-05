@@ -145,26 +145,7 @@ export default function HistoryScreen({ navigation }: Props) {
     return `${date} · ${formatTime(shownDay.duration)}`;
   }, [shownDay]);
 
-  const confirm = (message: string, onYes: () => void) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm(message)) onYes();
-    } else {
-      const { Alert } = require('react-native');
-      Alert.alert('Supprimer', message, [
-        {
-          text: 'Annuler',
-          style: 'cancel',
-        },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: onYes,
-        },
-      ]);
-    }
-  };
-
-  // One entry, and the sheet already named it — no second confirmation.
+  // The sheet's red button is the confirmation — no second popup on top.
   const handleDeleteDay = async () => {
     const day = shownDay;
     setDeleting(false);
@@ -173,13 +154,11 @@ export default function HistoryScreen({ navigation }: Props) {
     setSelectedDay(null);
   };
 
-  const handleDeleteAll = () => {
+  const handleDeleteAll = async () => {
     setDeleting(false);
-    confirm('Tous les scores seront supprimés.', async () => {
-      await clearHistory();
-      setHistory([]);
-      setSelectedDay(null);
-    });
+    await clearHistory();
+    setHistory([]);
+    setSelectedDay(null);
   };
 
   const handleExport = async () => {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { moderateScale as ms, scale } from 'react-native-size-matters';
 import { COLORS } from '../../theme';
+
+type Choice = 'day' | 'all';
 
 type Props = {
   visible: boolean;
@@ -28,38 +30,56 @@ export default function DeleteSheet({
   onDeleteAll,
   onCancel,
 }: Props) {
+  const [choice, setChoice] = useState<Choice | null>(null);
+
+  // Never reopen on the previous answer.
+  useEffect(() => { if (visible) setChoice(null); }, [visible]);
+
+  const option = (value: Choice, label: string, sub: string, disabled = false) => (
+    <TouchableOpacity
+      style={[styles.option, disabled && styles.optionDisabled]}
+      disabled={disabled}
+      onPress={() => setChoice(value)}
+    >
+      <View style={[styles.radio, choice === value && styles.radioOn]}>
+        {choice === value && <View style={styles.radioDot} />}
+      </View>
+      <View style={styles.optionLabels}>
+        <Text style={[styles.optionText, { fontSize: ms(14) }]}>{label}</Text>
+        <Text style={[styles.optionSub, { fontSize: ms(12) }]}>{sub}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={styles.backdrop} onPress={onCancel}>
         {/* Swallows taps so pressing the card doesn't dismiss it. */}
         <Pressable style={styles.card} onPress={() => {}}>
-          <Text style={[styles.title, { fontSize: ms(15) }]}>Supprimer</Text>
+          <Text style={[styles.title, { fontSize: ms(15) }]}>
+            Que voulez-vous supprimer ?
+          </Text>
 
-          <TouchableOpacity
-            style={[styles.choice, !dayLabel && styles.choiceDisabled]}
-            disabled={!dayLabel}
-            onPress={onDeleteDay}
-          >
-            <Text style={[styles.choiceText, { fontSize: ms(14) }]}>
-              la séance affichée
-            </Text>
-            <Text style={[styles.choiceSub, { fontSize: ms(12) }]}>
-              {dayLabel ?? 'aucune séance sélectionnée'}
-            </Text>
-          </TouchableOpacity>
+          {option(
+            'day',
+            'la séance affichée',
+            dayLabel ?? 'aucune séance sélectionnée',
+            !dayLabel,
+          )}
+          {option('all', 'tout l\'historique', 'toutes les séances seront perdues')}
 
-          <TouchableOpacity style={styles.choice} onPress={onDeleteAll}>
-            <Text style={[styles.choiceText, styles.danger, { fontSize: ms(14) }]}>
-              tout l&apos;historique
-            </Text>
-            <Text style={[styles.choiceSub, { fontSize: ms(12) }]}>
-              tous les scores seront perdus
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.cancel} onPress={onCancel}>
-            <Text style={[styles.cancelText, { fontSize: ms(13) }]}>annuler</Text>
-          </TouchableOpacity>
+          <View style={styles.actions}>
+            <TouchableOpacity style={[styles.btn, styles.cancelBtn]} onPress={onCancel}>
+              <Text style={[styles.cancelText, { fontSize: ms(14) }]}>Annuler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.btn, styles.deleteBtn, !choice && styles.btnDisabled]}
+              disabled={!choice}
+              onPress={choice === 'all' ? onDeleteAll : onDeleteDay}
+            >
+              <Text style={[styles.deleteText, { fontSize: ms(14) }]}>Supprimer</Text>
+            </TouchableOpacity>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
@@ -79,41 +99,83 @@ const styles = StyleSheet.create({
     maxWidth: scale(340),
     backgroundColor: COLORS.cardRaised,
     borderRadius: 16,
-    paddingVertical: 8,
+    padding: 16,
     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
     elevation: 8,
   },
   title: {
-    color: COLORS.grey,
+    color: COLORS.text,
     fontWeight: '700',
-    letterSpacing: 1,
     textAlign: 'center',
-    paddingVertical: 12,
+    marginBottom: 14,
   },
-  choice: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    marginBottom: 8,
   },
-  choiceDisabled: { opacity: 0.4 },
-  choiceText: {
+  optionDisabled: { opacity: 0.4 },
+  radio: {
+    width: scale(20),
+    height: scale(20),
+    borderRadius: scale(10),
+    borderWidth: 2,
+    borderColor: COLORS.greyDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOn: { borderColor: COLORS.bad },
+  radioDot: {
+    width: scale(10),
+    height: scale(10),
+    borderRadius: scale(5),
+    backgroundColor: COLORS.bad,
+  },
+  optionLabels: { flex: 1 },
+  optionText: {
     color: COLORS.text,
     fontWeight: '600',
   },
-  choiceSub: {
+  optionSub: {
     color: COLORS.greyDim,
     marginTop: 2,
   },
-  danger: { color: COLORS.bad },
-  cancel: {
-    paddingVertical: 14,
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  btn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 12,
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
+    // Raised enough to read as the thing you press, not another row.
+    boxShadow: '0 2px 6px rgba(0,0,0,0.45)',
+    elevation: 4,
+  },
+  btnDisabled: {
+    opacity: 0.35,
+    boxShadow: 'none',
+    elevation: 0,
+  },
+  cancelBtn: {
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   cancelText: {
     color: COLORS.grey,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  deleteBtn: { backgroundColor: COLORS.bad },
+  deleteText: {
+    color: COLORS.text,
+    fontWeight: '700',
   },
 });
