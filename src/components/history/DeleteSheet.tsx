@@ -147,12 +147,13 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    gap: 10,
-    marginTop: 8,
+    justifyContent: 'center',
+    gap: 24,
+    marginTop: 10,
   },
   btn: {
-    flex: 1,
     paddingVertical: 9,
+    paddingHorizontal: 22,
     borderRadius: 12,
     alignItems: 'center',
     // Raised enough to read as the thing you press, not another row.
